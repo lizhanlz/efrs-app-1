@@ -20,13 +20,14 @@ export default class MinePage extends Component {
         super(props)
         this.state = {
             userName: '',
-            passWord: ''
+            passWord: '',
+            backText:"密码错误！"
         }
 
     }
     componentDidMount () {
-             AsyncStorage.setItem('token','112');
-             console.log(1);
+             // AsyncStorage.setItem('token','112');
+            // console.log(1);
     }
     onPress ()  {
         if (this.state.userName && this.state.passWord){
@@ -36,8 +37,10 @@ export default class MinePage extends Component {
             logJson['passWord'] = this.state.passWord;
             //console.log(logJson)
            // this.props.navigation.navigate('Main')
-            Fetch.fetchData('usermessage',logJson,(res)=>{
-                if (res.code == '1'){
+            Fetch.fetchData('Login',logJson,(res)=>{
+                if (res.code === '1'){
+                    AsyncStorage.setItem('token','112');
+                    this.setState({backText:'用户名错误！'})
                    // this.props.navigation.navigate('Login')
                 }
             })
@@ -47,11 +50,12 @@ export default class MinePage extends Component {
         return (
             <View style={styles.container}>
                 <Cell proportion={4} alignment='center' cellStyles={{ backgroundColor: 'white',height:140 }} cellPadding='XL'>
-                    <Image style={styles.userImg} source={require('../../res/images/1.png')} />
+                    <Image style={styles.userImg} source={require('../../Res/Images/mainlogo.png')} />
                 </Cell>
                 <Cell proportion={10} alignment='center' cellStyles={styles.textInputView} cellPadding='XL'>
                     <TextInput style={styles.textInput}
                                placeholder = "请输入用户名"
+                               placeholderTextColor = "#bbbbbb"
                                underlineColorAndroid = 'transparent'
                                onChangeText ={(text) => {this.setState({userName:text})}}
                     />
@@ -59,16 +63,23 @@ export default class MinePage extends Component {
                 <Cell proportion={10} alignment='center' cellStyles={styles.textInputView} cellPadding='XL'>
                     <TextInput style={styles.textInput}
                                placeholder = "请输入密码"
+                               placeholderTextColor = "#bbbbbb"
                                underlineColorAndroid = 'transparent'
                                onChangeText ={(text) => {this.setState({passWord:text})}}
                     />
                 </Cell>
+                <Cell proportion={10} alignment='center' cellStyles={styles.backTextWrapper}>
+                    <Text style={styles.backText}>
+                        {this.state.backText}
+                    </Text>
+                </Cell>
                 <Cell proportion={10} alignment='center' cellStyles={styles.textButtonView}>
                     <View style={styles.button}>
                     <Button
-                            title={"登陆"}
+                            title={"登录"}
                             onPress={()=>{this.onPress()}}
-                            color="red"
+                            color="#E63C27"
+                            fontSize="18"
                     />
                     </View>
                 </Cell>
@@ -85,25 +96,35 @@ const styles = StyleSheet.create({
     textInput: {
         width:'90%',
         backgroundColor: 'white',
-        borderColor: '#ffffff',
     },
     textInputView: {
         borderWidth:1,
         borderRadius:5,
-        borderColor: '#000000',
+        borderColor: '#dfdfdf',
         backgroundColor: 'white',
-        height:46
+        height:56
     },
     textButtonView: {
         borderRadius:5,
-        backgroundColor: 'red',
-        height:46,
-        marginTop:30,
+        backgroundColor: '#E63C27',
+        height:56,
+        marginTop:20,
+    },
+    backTextWrapper: {
+        backgroundColor: 'white',
+        alignItems: 'flex-start',
+        height:14,
+        paddingLeft:12,
+    },
+    backText: {
+        fontSize:12,
+        color:'#E63C27',
+        //borderRadius:5,
+        // backgroundColor: 'blue',
     },
     button: {
         width:'100%',
         //borderRadius:5,
        // backgroundColor: 'blue',
-
     },
 });

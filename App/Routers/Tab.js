@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { TabNavigator } from 'react-navigation';
-
+import NavigationService from '../Utils/NavigationService';
 import {
     StyleSheet,
     Image, AsyncStorage,
@@ -14,13 +14,15 @@ import InformationPage from '../Pages/TabPages/InformationPage/InformationPage';
 import AttentionPage from '../Pages/TabPages/AttentionPage/AttentionPage';
 import MinePage from '../Pages/TabPages/MinePage/MinePage';
 //获取本地存储中的token
-let token;
-let getToken = () =>{
-    AsyncStorage.getItem('token').then((value)=>{
-        token = value;
-        console.log(value)
-    });
-}
+// let token;
+var Dimensions = require('Dimensions');
+var {width,height} = Dimensions.get('window');
+// let getToken = () =>{
+//     AsyncStorage.getItem('token').then((value)=>{
+//         token = value;
+//         console.log(value)
+//     });
+// }
 const Tab = TabNavigator({
     // 首页
     Home: {
@@ -31,7 +33,7 @@ const Tab = TabNavigator({
             tabBarIcon: ({ tintColor }) => (
                 <Image
                     source = {
-                        require('../Res/Images/test.png')
+                        require('../Res/Images/首页.png')
                     }
                     style={[ styles.icon, { tintColor: tintColor }]} // { tintColor: tintColor } 选中的图片和文字颜色
                 />
@@ -41,7 +43,26 @@ const Tab = TabNavigator({
             },
         }
     },
-    // 风险页
+    // 风险提示页
+    Risk: {
+        screen: RiskPage,
+        navigationOptions: {
+            title: '风险提示',
+            tabBarLabel: '风险提示',
+            tabBarIcon: ({ tintColor }) => (
+                <Image
+                    source = {
+                        require('../Res/Images/风险.png')
+                    }
+                    style={[ styles.icon, { tintColor: tintColor }]} // { tintColor: tintColor } 选中的图片和文字颜色
+                />
+            ),
+            headerTitleStyle: {
+                alignSelf: 'center'
+            },
+        }
+    },
+   /* // 风险页
     Risk: {
         screen: RiskPage,
         navigationOptions: {
@@ -50,7 +71,7 @@ const Tab = TabNavigator({
             tabBarIcon: ({ tintColor }) => (
                 <Image
                     source = {
-                        require('../Res/Images/test.png')
+                        require('../Res/Images/风险.png')
                     }
                     style={[ styles.icon, { tintColor: tintColor }]} // { tintColor: tintColor } 选中的图片和文字颜色
                 />
@@ -69,7 +90,7 @@ const Tab = TabNavigator({
             tabBarIcon: ({ tintColor }) => (
                 <Image
                     source = {
-                        require('../Res/Images/test.png')
+                        require('../Res/Images/情报.png')
                     }
                     style={[ styles.icon, { tintColor: tintColor }]} // { tintColor: tintColor } 选中的图片和文字颜色
                 />
@@ -78,7 +99,7 @@ const Tab = TabNavigator({
                 alignSelf: 'center'
             },
         }
-    },
+    },*/
     // 关注页
     Attention: {
         screen: AttentionPage,
@@ -88,7 +109,7 @@ const Tab = TabNavigator({
             tabBarIcon: ({ tintColor }) => (
                 <Image
                     source = {
-                        require('../Res/Images/test.png')
+                        require('../Res/Images/关注.png')
                     }
                     style={[ styles.icon, { tintColor: tintColor }]} // { tintColor: tintColor } 选中的图片和文字颜色
                 />
@@ -107,7 +128,7 @@ const Tab = TabNavigator({
             tabBarIcon: ({ tintColor }) => (
                 <Image
                     source = {
-                        require('../Res/Images/test.png')
+                        require('../Res/Images/我的.png')
                     }
                     style={[ styles.icon, { tintColor: tintColor }]} // { tintColor: tintColor } 选中的图片和文字颜色
                 />
@@ -117,15 +138,12 @@ const Tab = TabNavigator({
             },
             tabBarOnPress:(obj) => {
                 AsyncStorage.getItem('token').then((value)=>{
-
                     if (value){
                         obj.jumpToIndex(obj.scene.index);
                     }else{
-                        this.props.navigation.navigate('Login');
+                        NavigationService.navigator("Login");
                     }
                 });
-                // console.log(obj.scene.index);
-                // console.log(obj.scene.route);
             }
         }
     },
@@ -136,42 +154,38 @@ const Tab = TabNavigator({
     swipeEnable: true, // 禁止左右滑动
     backBehavior: 'none', // 按 back 键是否跳转到第一个 Tab，none 为不跳转
     tabBarOptions: {
-        activeTintColor: '#0F9C00', // 文字和图片选中颜色
-        inactiveTintColor: '#999', // 文字和图片默认颜色
+        activeTintColor: '#e63c27', // 文字和图片选中颜色
+        inactiveTintColor: '#646464', // 文字和图片默认颜色
         showIcon: true, // android 默认不显示 icon，需要设置为 true 才显示
         indicatorStyle: {height: 0}, // android 中 TabBar 下面会显示一条线，高度设为 0 后就不显示线了，不知道还有没有其他隐藏方法
         style: {
-            backgroundColor: '#444', // TabBar 背景色
-            height: 50,
+            backgroundColor: 'white', // TabBar 背景色
+            height: 110*width/750,
+
+
+        },
+        iconStyle:{
+            width:40*width/750,
+            height:40*width/750,
+            marginTop:3,
         },
         labelStyle: {
             fontSize: 12, // 文字大小
-            marginTop:0, //
+            marginTop:5,
+
+
         },
     },
 });
 
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#F5FCFF',
-    },
-    welcome: {
-        fontSize: 20,
-        textAlign: 'center',
-        margin: 10,
-    },
-    instructions: {
-        textAlign: 'center',
-        color: '#333333',
-        marginBottom: 5,
-    },
+
     icon: {
-        width: 20,
-        height: 20,
+
+        width:40*width/750,
+        height:40*width/750,
+
     },
 
 });

@@ -1,0 +1,32 @@
+export const InformationSudokuData = [
+    [
+        {name: '工商信息', image: require('../Images/工商信息.png')},
+        {name: '管理人员', image: require('../Images/工商信息.png')},
+        {name: '股东信息', image: require('../Images/工商信息.png')},
+        {name: '法人对外投资', image: require('../Images/工商信息.png')},
+        {name: '对外任职', image: require('../Images/工商信息.png')},
+        {name: '分支机构', image: require('../Images/工商信息.png')},
+        {name: '企业对外投资', image: require('../Images/工商信息.png')},
+        {name: '变更信息', image: require('../Images/工商信息.png')},
+        {name: '企业年报', image: require('../Images/工商信息.png')},
+        {name: '税务开票', image: require('../Images/工商信息.png')},
+        {name: '抽查检查', image: require('../Images/工商信息.png')},
+        {name: '招投标', image: require('../Images/工商信息.png')},
+        {name: '招聘信息', image: require('../Images/工商信息.png')},
+        {name: '进出口登记', image: require('../Images/工商信息.png')},
+        {name: '公示许可', image: require('../Images/工商信息.png')},
+        {name: '动产抵押', image: require('../Images/工商信息.png')},
+        {name: '股权出质', image: require('../Images/工商信息.png')},
+        {name: '实力评价', image: require('../Images/工商信息.png')},
+        {name: '环保评价', image: require('../Images/工商信息.png')},
+        {name: '税务评价', image: require('../Images/工商信息.png')},
+        {name: '进出口信用', image: require('../Images/工商信息.png')},
+        {name: '注册网站', image: require('../Images/工商信息.png')},
+        {name: '资质证书', image: require('../Images/工商信息.png')},
+        {name: '商标信息', image: require('../Images/工商信息.png')},
+        {name: '专利信息', image: require('../Images/工商信息.png')},
+        {name: '软件著作', image: require('../Images/工商信息.png')},
+        {name: '作品著作', image: require('../Images/工商信息.png')}
+    ],
+    [1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1,1,0,1,1,1]
+];

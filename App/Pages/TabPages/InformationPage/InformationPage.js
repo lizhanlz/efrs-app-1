@@ -8,41 +8,66 @@ import {
     Text,
     View,
     Button,
-} from 'react-native';
+    ScrollView,
 
-export default class InformationPage extends Component {
+} from 'react-native';
+import CommonSudoku from '../../../Common/CommonSudoku';
+
+import { InformationSudokuData } from "../../../Res/Data/InformationSudoku";
+
+
+export default class AllSudokuPage extends Component {
+    constructor(props){
+        super(props);
+        thiz=this;
+        this.state = {
+            InformationData:[],//存储列表数据
+            InformationType:[], //存储九宫格跳转类型
+        };
+    }
+    componentWillMount() {
+        //获取data数据
+        this.setState({
+            InformationData:InformationSudokuData[0],
+            InformationType:InformationSudokuData[1],
+        })
+    }
+
     render() {
+        const { state: {params}} = this.props.navigation
         return (
-            <View style={styles.container}>
-                <Text style={styles.welcome}>
-                    情报
-                </Text>
-                <Button title={'Go to Search'} onPress={() => this.props.navigation.navigate('Search')}/>
-            </View>
+            <ScrollView style={styles.container}>
+                <View style={styles.sudoku}>
+                    <CommonSudoku
+                        ref={'InformationSudoku'}
+                        data={this.state.InformationData}
+                        type={this.state.InformationType}
+                        onPressFn={this._onPressFn.bind(this)}
+                        headerName={'情报信息'}
+
+                    />
+                </View>
+
+            </ScrollView>
         )
     }
+    //跳转到搜索页
+    _onPressFn () {
+        this.props.navigation.navigate('Search')
+        console.log(this.refs.Sudoku.state.name)
+    };
+
 }
+
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
         backgroundColor: '#F5FCFF',
     },
-    welcome: {
-        fontSize: 20,
-        textAlign: 'center',
-        margin: 10,
-    },
-    instructions: {
-        textAlign: 'center',
-        color: '#333333',
-        marginBottom: 5,
-    },
-    icon: {
-        width: 20,
-        height: 20,
+    sudoku:{
+        marginTop:10,
+        marginBottom:1,
+        backgroundColor:'white',
     },
 
 });
