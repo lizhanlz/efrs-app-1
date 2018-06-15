@@ -1,5 +1,4 @@
 // 我的页面
-
 import React, { Component } from 'react';
 
 import {
@@ -21,29 +20,64 @@ export default class MinePage extends Component {
         this.state = {
             userName: '',
             passWord: '',
-            backText:"密码错误！"
+            backText:"",
+            disable:false
         }
-
     }
     componentDidMount () {
-             // AsyncStorage.setItem('token','112');
+            // AsyncStorage.setItem('token','112');
             // console.log(1);
     }
     onPress ()  {
-        if (this.state.userName && this.state.passWord){
-            //alert(this.state.userName);
+        if (this.state.userName === ''){
+            this.setState({backText:'用户名不能为空!'});
+            return;
+        } else if (this.state.passWord === '') {
+            this.setState({backText:'密码不能为空!'});
+            return;
+        }else if (this.state.userName && this.state.passWord){
+
+            //this.setState({disable:true});
             let logJson = {};
             logJson['userName'] = this.state.userName;
             logJson['passWord'] = this.state.passWord;
-            //console.log(logJson)
-           // this.props.navigation.navigate('Main')
-            Fetch.fetchData('Login',logJson,(res)=>{
-                if (res.code === '1'){
-                    AsyncStorage.setItem('token','112');
-                    this.setState({backText:'用户名错误！'})
-                   // this.props.navigation.navigate('Login')
-                }
-            })
+           Fetch.fetchData('Login',logJson,(res)=>{
+               if (res.code === '1'){
+                   this.setState({disable:false});
+                   AsyncStorage.setItem('token','112');
+                   this.setState({backText:'用户名错误！'})
+                   this.props.navigation.navigate('Mine');
+               }
+           });
+           // fetch('http://84.232.237.87:8080/efrsapp/app/MyJson/jsonpost.do',{
+           //      method:'POST',
+           //      headers:{
+           //          'content-type':'application/json;charset=UTF-8'
+           //      },
+           //      body:JSON.stringify({
+           //          "serviceKey":"裁判文书",
+           //          "bankId":"23FE904471DEB429",
+           //          "userId":"888899998",
+           //          "key":"中国工商银行股份有限公司",
+           //          "page":"1",
+           //          "size":"10"
+           //      })
+           //  })
+           //      .then((response) =>{
+           //         JSON.parse(response._bodyInit)
+           //          console.log(response);
+           //          console.log(JSON.parse(response._bodyInit));
+           //         return response.json();
+           //      })
+           //      .then((responseJson) =>{
+           //         console.log(responseJson);
+           //          if (responseJson.code == 1){
+           //              NavigationService.navigator('Login')
+           //          }
+           //      })
+           //      .catch((error) => {
+           //          console.log(error);
+           //      })
         }
     }
     render() {
@@ -74,14 +108,15 @@ export default class MinePage extends Component {
                     </Text>
                 </Cell>
                 <Cell proportion={10} alignment='center' cellStyles={styles.textButtonView}>
-                    <View style={styles.button}>
-                    <Button
-                            title={"登录"}
-                            onPress={()=>{this.onPress()}}
-                            color="#E63C27"
-                            fontSize="18"
-                    />
-                    </View>
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={()=>{this.onPress()}}
+                        disabled={this.state.disable}
+                    >
+                            <Text style={styles.buttonText}>
+                                登录
+                            </Text>
+                    </TouchableOpacity>
                 </Cell>
             </View>
         )
@@ -105,8 +140,7 @@ const styles = StyleSheet.create({
         height:56
     },
     textButtonView: {
-        borderRadius:5,
-        backgroundColor: '#E63C27',
+        backgroundColor: 'white',
         height:56,
         marginTop:20,
     },
@@ -124,7 +158,14 @@ const styles = StyleSheet.create({
     },
     button: {
         width:'100%',
-        //borderRadius:5,
-       // backgroundColor: 'blue',
+        borderRadius:5,
+        height:56,
+        backgroundColor:'#E63C27',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    buttonText: {
+        color:'#ffffff',
+        fontSize:16,
     },
 });

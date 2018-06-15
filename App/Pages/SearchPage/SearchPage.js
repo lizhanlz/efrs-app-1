@@ -15,6 +15,7 @@ import {
     FlatList,
     ActivityIndicator,
 } from 'react-native';
+import { MessageBox } from 'IFTide';
 import Fetch from "../../Fetch/DataFactories";
 import Soat from "../../Utils/JsonUtils";
 const selectMoneyData = ["不限","0-100万","100-200万","200-500万","500-1000万","1000万以上",];
@@ -39,6 +40,7 @@ export default class SearchPage extends Component {
             selectType:1,
             searchValue: '',
             soat:false,
+            soatDisable:true,
             soatOptionsActive:'',
             searchOptionsValue:[],
             searchIndustryValue: '',
@@ -47,7 +49,7 @@ export default class SearchPage extends Component {
             selectIndustryDefault:"全部行业",
             selectIndustryIndex:'',
             refreshing:false,//当前的刷新状态
-            showFoot:2,
+            showFoot:0,
             params:{"pageNum":currentPage,"key":'',"size":'10',"esdateStart":'起始时间',"esdateEnd":'',"regcapGte":'起始资本',"regcapLte":''},
         }
     }
@@ -70,18 +72,23 @@ export default class SearchPage extends Component {
     //搜索按钮回调
     sendSearch () {
         if (this.state.searchValue === ''){
-            alert('搜索内容不能为空')
+            this.alertSearch._show();
             return
         }
         params.key = this.state.searchValue;
         this.setState({seachResult:true});
-    }
+    };
+    //键盘搜索按钮回调
+    onSubmitEditing (){
+        // alert(1);
+        this.sendSearch();
+    };
     deleteSearch () {
         if (this.state.searchValue !== ''){
            // alert(1);
             this.myTextInput.clear();
         }
-    }
+    };
     searchCitySelect (code,number) {
         //alert(1);
        // console.log(code.name);
@@ -95,7 +102,7 @@ export default class SearchPage extends Component {
         console.log(params);
        // this.getCompanyListData()
        // this.fontCut(code.name);
-    }
+    };
     searchIndustrySelect (code,number) {
          //alert(2);
         // console.log(1);
@@ -108,13 +115,16 @@ export default class SearchPage extends Component {
         params.Industry = code.name;
         console.log(params);
         //this.getCompanyListData()
-    }
+    };
     openSoat(){
         //console.log(this.state.listData);
-        if (this.state.listData == ''){
-           // console.log(this.state.listData);
-           return
-        }
+        // if (this.state.listData == ''){
+        //    // console.log(this.state.listData);
+        //     this.setState({soatDisable:true});
+        //     return
+        // }else{
+        //     this.setState({soatDisable:false});
+        // }
         if (this.state.soat === true){
             this.setState({soat:false});
         }else{
@@ -123,7 +133,7 @@ export default class SearchPage extends Component {
             this.setState({textNum:''});
         }
         //this.setState({soat:true});
-    }
+    };
     soatOptionActive(itme,index){
        // alert(index)
         this.setState({soatOptionsActive:index});
@@ -147,7 +157,7 @@ export default class SearchPage extends Component {
         },()=>{
             getSortData();
         });
-    }
+    };
     openSlect(num) {
        // console.log(cityData);
         this.setState({selectType:num});
@@ -165,7 +175,7 @@ export default class SearchPage extends Component {
         }else if (num === 2) {
             this.setState({searchOptionsValue:industryData});
         }
-    }
+    };
     slectedMoney (itme,index) {
             this.setState({selectedMoneyActive:index});
             if (index === 0){
@@ -188,7 +198,7 @@ export default class SearchPage extends Component {
                 params.regcapLte = '';
             }
         console.log(params)
-    }
+    };
     slectedTime (itme,index) {
         this.setState({selectedTimeActive:index});
         if (index === 0){
@@ -211,7 +221,7 @@ export default class SearchPage extends Component {
             params.esdateEnd = '';
         }
         console.log(params)
-    }
+    };
     getView = ({item}) => {
         //返回每个itemthis.props.navigation.navigate('Company')
         return(<TouchableWithoutFeedback
@@ -300,6 +310,9 @@ export default class SearchPage extends Component {
     }
     //请求上拉加载数据
     onEndReached  =() => {
+        if (this.state.listData.length >= 100){
+            return
+        }
        // console.log(params);
        let pageNum = 1;
         Fetch.fetchData(REQUEST_URL,{},(res) => {
@@ -307,13 +320,16 @@ export default class SearchPage extends Component {
            if(pageNum>=totalPage){
                foot =1;//底部显示没有更多数据
            }
-            console.log(res);
-        this.setState({
-            listData:this.state.listData.concat(res.data.companyMessage),
-            data:res.data
-        });
+            //console.log(res);
+            this.setState({
+                listData:this.state.listData.concat(res.data.companyMessage),
+                data:res.data
+            });
+           if (this.state.listData != ''){
+               this.setState({soatDisable:false});
+           }
         })
-    }
+    };
     //下拉刷新方法
     onRefresh =() =>{
         //设置刷新状态为正在刷新
@@ -333,6 +349,9 @@ export default class SearchPage extends Component {
         let fontCut = font.slice(0,4) + '...';
         return fontCut;
     }
+    // _getItemLoyout = (data:any,index:number)=>{
+    //     return getItemLayout(data,index,false);
+    // };
     render() {
         //const { state: {params}} = this.props.navigation;
         const selectOptions = this.state.searchOptionsValue?this.state.searchOptionsValue.map((itme,index)=>{
@@ -416,6 +435,9 @@ export default class SearchPage extends Component {
                                    placeholder = "请输入企业名称,人名,品牌等"
                                    placeholderTextColor = "#bbbbbb"
                                    underlineColorAndroid = 'transparent'
+                                   returnKeyType = "search"
+                                   onSubmitEditing={()=>{this.onSubmitEditing()}}
+                                  // returnKeyLabel={}
                                    onChangeText ={(text) => {this.setState({searchValue:text})}}
                         />
                         <TouchableOpacity
@@ -428,6 +450,7 @@ export default class SearchPage extends Component {
                     <View >
                         <TouchableOpacity
                             onPress={()=>{this.openSoat()}}
+                            disabled={this.state.soatDisable}
                         >
                             <Text >
                                排序
@@ -474,7 +497,6 @@ export default class SearchPage extends Component {
                     {/*</View>*/}
                 {/*</View>*/}
                 {/*历史记录结束*/}
-                {/*{this.state.seachResult?seachResult:<Text></Text>}*/}
                 <View style={[styles.seachResult,this.state.seachResult === false&&styles.seachResultHidden]}>
                     <View style={styles.seachSelect}>
                             <TouchableWithoutFeedback
@@ -524,6 +546,7 @@ export default class SearchPage extends Component {
                             initialNumToRender={this.initialNumToRender}
                             keyExtractor={this._keyExtractor}
                             renderItem={this.getView}//渲染每一条记录
+                            // getItemLayout={this._getItemLoyout}
                             ListFooterComponent={this.footer}//尾部
                             //下拉刷新，必须设置refreshing状态
                             onRefresh={this.onRefresh}
@@ -534,6 +557,9 @@ export default class SearchPage extends Component {
                         >
                         </FlatList>
                     </View>
+                    <TouchableWithoutFeedback
+                        onPress={()=>{this.setState({modal:false,textNum:0})}}
+                    >
                     <View style={[styles.seachValue,this.state.modal?styles.seachValueModalYes:styles.seachValueModalNo]}>
                         <View style={styles.scrollViewContainer}>
                             <View style={this.state.selectType === 3?styles.scrollViewInnerMore:styles.scrollViewInner}>
@@ -545,23 +571,36 @@ export default class SearchPage extends Component {
                             </View>
                         </View>
                     </View>
+                    </TouchableWithoutFeedback>
                 </View>
-                <View style={[styles.sortWrapper,this.state.soat?styles.sortWrapperShow:styles.sortWrapperHidden]}>
-                    <View style={styles.sortInner}>
-                        {soatData.map((itme,index)=>{
-                            return(<TouchableWithoutFeedback
-                            onPress={()=>{this.soatOptionActive(itme,index)}}
-                            key={index}
-                            >
-                                <View style={[styles.sortOptions,this.state.soatOptionsActive === index&&styles.sortOptionsActive]}>
-                                    <Text>
-                                        {itme}
-                                    </Text>
-                                </View>
-                            </TouchableWithoutFeedback>)
-                         })}
+                <TouchableWithoutFeedback
+                    onPress={()=>{this.setState({soat:false})}}
+                >
+                    <View style={[styles.sortWrapper,this.state.soat?styles.sortWrapperShow:styles.sortWrapperHidden]}>
+                        <View style={styles.sortInner}>
+                            {soatData.map((itme,index)=>{
+                                return(<TouchableWithoutFeedback
+                                onPress={()=>{this.soatOptionActive(itme,index)}}
+                                key={index}
+                                >
+                                    <View style={[styles.sortOptions,this.state.soatOptionsActive === index&&styles.sortOptionsActive]}>
+                                        <Text>
+                                            {itme}
+                                        </Text>
+                                    </View>
+                                </TouchableWithoutFeedback>)
+                             })}
+                        </View>
                     </View>
-                </View>
+                </TouchableWithoutFeedback>
+                <MessageBox
+                    ref={(obj) =>{this.alertSearch = obj}}
+                    alertType = {1}
+                    title={'提示'}
+                    detailText={'搜索内容不能为空！'}
+                    onClose={() => {
+                    }}
+                />
             </View>
         )
     }
