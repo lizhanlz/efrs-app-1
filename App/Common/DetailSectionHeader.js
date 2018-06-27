@@ -9,7 +9,6 @@ import {
     Easing
 } from 'react-native'
 
-const top_arrow = '../Res/Images/top_arrow.png'
 export default class DetailSectionHeader extends Component {
 
 

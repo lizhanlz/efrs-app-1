@@ -9,11 +9,13 @@ import {
     TouchableOpacity
 } from 'react-native';
 import Fetch from '../Fetch/DataFactories';
-const REQUEST_URL = 'fygg';//请求的分页json文件
+const REQUEST_URL = 'jsonpost';//请求的分页json文件
 const detailPage = 'Detail';//点击跳转的下一个页面
-let totalPage =3;//数据总页数
+let totalPage;
 let pageNo = 1;//当前第几页
-
+let page="1";
+var Dimensions = require('Dimensions');
+var {width,height} = Dimensions.get('window');
 export default class CommonListPage extends Component{
 
     constructor(props){
@@ -22,6 +24,8 @@ export default class CommonListPage extends Component{
 
         this.state = {
             data:[],//存储列表数据
+            Code:"",
+            errorMsg:"",
             showFoot:2,
             listtype:"1",
             datalength:0,
@@ -39,17 +43,19 @@ export default class CommonListPage extends Component{
                 flex:1,
             },
             headerRight: (<View></View>)
-
         }
+
+
     }
+
 
 
 
 
     render(){
         const { state: {params}} = this.props.navigation;
-
-         return(
+        console.log(this.state.data);
+        return(
             <View >
                 <FlatList
 
@@ -61,7 +67,7 @@ export default class CommonListPage extends Component{
 
                     //ListHeaderComponent={this.header}//头部
                     ListFooterComponent={this.footer.bind(this)}//尾部
-
+                    ListEmptyComponent={this.ListEmptyComponent()}//data为空
                     //下拉刷新，必须设置refreshing状态
                     onRefresh={this.onRefresh}
                     refreshing={this.state.refreshing}
@@ -73,6 +79,7 @@ export default class CommonListPage extends Component{
                 />
             </View>
         );
+
     }
 
     getView({item}){
@@ -81,7 +88,35 @@ export default class CommonListPage extends Component{
 
 
         //判断列表显示样式，年报类还是普通类。0为普通类，1为年报类，该列表页只展示年份;2为动产抵押。
-        if(thiz.state.listtype ==="0")
+
+        if(thiz.state.listtype ==="1"){
+
+            arr.push(
+                <Text key={item.name}  style={styles._key}>{item.name}
+                </Text>
+            );
+            console.log(arr);
+        }
+        else if(thiz.state.listtype ==="2"){
+            let listvalue =Object.values(item.value);
+            //for(let n =0;n<listvalue.length;n++){
+            let key = Object.keys(listvalue[0]);
+            let value =Object.values(listvalue[0]);
+            console.log(arr);
+            for(let i=0;i<3;i++){
+                arr.push(
+                    <Text key={'Li'+i} style={styles.key}>{key[i]}:
+                        <Text style={styles.value}>  {value[i]}
+                        </Text>
+                    </Text>
+                );
+
+            }
+            //}
+
+
+        }
+        else
         {
             //json数据前4个字段，循环生成列表
 
@@ -93,32 +128,6 @@ export default class CommonListPage extends Component{
                     </Text>
                 );
             }
-        }
-        else if(thiz.state.listtype ==="1"){
-
-                arr.push(
-                    <Text key={item.name}  style={styles._key}>{item.name}
-                    </Text>
-                );
-
-        }
-        else if(thiz.state.listtype ==="2"){
-                let listvalue =Object.values(item.value);
-                //for(let n =0;n<listvalue.length;n++){
-                    let key = Object.keys(listvalue[0]);
-                    let value =Object.values(listvalue[0]);
-                    console.log(arr);
-                     for(let i=0;i<3;i++){
-                        arr.push(
-                            <Text key={'Li'+i} style={styles.key}>{key[i]}:
-                                <Text style={styles.value}>  {value[i]}
-                                </Text>
-                            </Text>
-                        );
-
-                    }
-                //}
-
         }
         return(
             <TouchableOpacity activeOpacity={1}
@@ -149,10 +158,10 @@ export default class CommonListPage extends Component{
     //footer 尾部
     footer(){
         if(this.state.showFoot === 1){
-           // var flatheight= Dimensions.get('FlatList');
+            // var flatheight= Dimensions.get('FlatList');
             return(
                 //<View style={{height:30,alignItems:'center',justifyContent:'flex-start',}}>
-                 //   <Text style={{color:'black',fontSize:14,marginTop:5,marginBottom:5,}}>没有更多数据了</Text>
+                //   <Text style={{color:'black',fontSize:14,marginTop:5,marginBottom:5,}}>没有更多数据了</Text>
                 //</View>
                 <View ><Text></Text></View>
             );
@@ -165,9 +174,9 @@ export default class CommonListPage extends Component{
                 </View>
             );
         }
-        else if(this.state.showFoot===2){
+        else {
             return(
-                <View style={styles.footer}><Text></Text></View>
+                <View style={styles.footer}><Text>{thiz.state.errorMsg}</Text></View>
             );
         }
     }
@@ -180,7 +189,7 @@ export default class CommonListPage extends Component{
         }
         //如果当前页大于或者等于总页数，那就是最后一页了，返回
         if((pageNo!=1)&&(pageNo>=totalPage)){
-            return;
+            this.setState({showFoot:1});
         }else{
             pageNo++;
         }
@@ -203,97 +212,213 @@ export default class CommonListPage extends Component{
 
     //请求上拉加载数据
     requestPageData=()=>{
-
-        Fetch.fetchData(REQUEST_URL+pageNo,{},function(res) {
-            let foot = 0;
-            if(pageNo>=totalPage){
-                foot =1;//底部显示没有更多数据
+        page=pageNo+"";
+        Fetch.fetchData(REQUEST_URL,{"serviceKey":this.props.navigation.state.params.info,
+            "bankId":"8B94459B9F1D4ECD",
+            "userId":"001100807",
+            "key":this.props.navigation.state.params.key,
+            "page":page,
+            "size":"10"},function(res) {
+            let msg="";
+            let code=res.code;
+            let totalpage=Number(totalPage);
+            console.log(totalpage);
+            //判断请求是否成功
+            if(code!="200" && code!="0000")
+            {
+                thiz.handlerError(code);
+                thiz.setState({
+                    showFoot:2,
+                });
             }
 
-            //上拉加载的新数据push进原数据数组
-            const getNewData =(res)=> {
-                let olddata = thiz.state.data;
-                if (res.listtype === "0") {
+            else{
+                let foot = 0;
 
-                    for (let i = 0; i < res.data.length; i++) {
-                        olddata.push(res.data[i]);
-
-                    }
-                    return olddata
+                if(pageNo>=totalPage){
+                    foot =1;//底部显示没有更多数据
                 }
 
-                else if (res.listtype === "1" || res.listtype === "2") {
-                    let SecondData = res.data;
-                    let DataArr = [];
-                    for (let i in SecondData) {
-                        DataArr.push(
-                            {
-                                name: i,
-                                value: SecondData[i],
-                            }
-                        );
-                    }
-                    for (let i = 0; i < DataArr.length; i++) {
-                        olddata.push(DataArr[i]);
+                //上拉加载的新数据push进原数据数组
+                const getNewData =(res)=> {
+                    let olddata = thiz.state.data;
 
+                    if (res.listtype === "1" || res.listtype === "2") {
+                        let SecondData = res.data;
+                        let DataArr = [];
+                        for (let i in SecondData) {
+                            DataArr.push(
+                                {
+                                    name: i,
+                                    value: SecondData[i],
+                                }
+                            );
+                        }
+                        for (let i = 0; i < DataArr.length; i++) {
+                            olddata.push(DataArr[i]);
+
+                        }
+                        return olddata
                     }
-                    return olddata
+                    else {
+
+                        for (let i = 0; i < res.data.length; i++) {
+                            olddata.push(res.data[i]);
+
+                        }
+                        return olddata
+                    }
                 }
+                const newData = getNewData(res)
+
+                //this的作用域需要重新指定为thiz
+                thiz.setState({
+                    data:newData,
+
+                    refreshing:false,
+                    showFoot:foot,
+
+                    listtype:res.listtype,
+                });
             }
-            const newData = getNewData(res)
-
-            //this的作用域需要重新指定为thiz
-            thiz.setState({
-                data:newData,
-
-                refreshing:false,
-                showFoot:foot,
-
-            });
-
         })
     }
     //请求下拉刷新数据
     requestRefreshData=()=>{
         pageNo=1;
+        page="1";
         //具体请求的参数在文档里面写出，根据模块不同，配置的参数也不同。
-        Fetch.fetchData(REQUEST_URL+pageNo,{},function(res) {
-            let foot = 0;
-            if(pageNo>=totalPage){
-                foot =1;//底部显示没有更多数据
-            }
-            let FirstData = res.data;
-            let DataArr = [];
-            if(res.listtype ==="0"){
-                DataArr = res.data;
-            }
-            else if(res.listtype ==="1" || res.listtype ==="2") {
-                for (let i in FirstData) {
+        Fetch.fetchData(REQUEST_URL,{"serviceKey":this.props.navigation.state.params.info,
+            "bankId":"8B94459B9F1D4ECD",
+            "userId":"001100807",
+            "key":this.props.navigation.state.params.key,
+            "page":page,
+            "size":"10"},function(res) {
 
-                    DataArr.push(
-                        {
-                            name: i,
-                            value: FirstData[i],
-                        }
-                    );
-                }
+            let msg="";
+            let code=res.code;
+            let Msg=res.msg;
+            if(code!="200" && code!="0000")
+            {
+                thiz.handlerError(code,Msg);
+                thiz.setState({
+                    refreshing:false,
+
+                });
             }
-            //this的作用域需要重新指定为thiz
+
+            else{
+                /*   totalPage=res.totalpage;
+
+                   if(pageNo>=totalPage){
+                       foot =1;//底部显示没有更多数据
+                   }
+                   console.log("111");
+                   console.log(res);*/
+                let foot = 0;
+                let FirstData = res.data;
+                let DataArr = [];
+
+                if(res.listtype ==="1" || res.listtype ==="2") {
+                    for (let i in FirstData) {
+
+                        DataArr.push(
+                            {
+                                name: i,
+                                value: FirstData[i],
+                            }
+                        );
+                    }
+                }
+                else {
+                    DataArr = res.data;
+                }
+                //this的作用域需要重新指定为thiz
+                thiz.setState({
+                    data:DataArr,
+                    refreshing:false,
+                    showFoot:foot,
+                    Code:res.code,
+                    listtype:res.listtype,
+                });
+            }
+        })
+    }
+    //第一次加载数据
+    componentWillMount(){
+        //第一次请求后端数据
+        //this.requestRefreshData();
+        totalPage=this.props.navigation.state.params.totalpage,
+            //获取上级页面传来的参数
+        console.log(this.props.navigation.state.params.data);
+
+        let foot = 0;
+        let FirstData = this.props.navigation.state.params.data;
+        let DataArr = [];
+        if(this.props.navigation.state.params.listtype ==="1" || this.props.navigation.state.params.listtype ==="2") {
+            for (let i in FirstData) {
+
+                DataArr.push(
+                    {
+                        name: i,
+                        value: FirstData[i],
+                    }
+                );
+            }
+        }
+        if(this.props.navigation.state.params.info==="照面信息")
+        {
+                DataArr.push(FirstData);
+            
+        }
+        else {
+            DataArr = this.props.navigation.state.params.data;
+        }
+
+
             thiz.setState({
                 data:DataArr,
                 refreshing:false,
                 showFoot:foot,
-                listtype:res.listtype,
+                listtype:this.props.navigation.state.params.listtype,
+
             });
 
-        })
     }
-    //第一次加载数据
-    componentDidMount(){
-        //第一次请求后端数据
-        this.requestRefreshData();
+    //data为空展示信息
+    ListEmptyComponent(){
+        if(thiz.state.listtype ==="3"){
+            return <View style={styles.info}><Text style={styles.infotxt}>存在{this.props.navigation.state.params.info}行为</Text></View>
+        }
+     /*   else if(thiz.state.listtype ==="4"){
+            return <View style={styles.info}><Text style={styles.infotxt}>该企业不存在相关记录</Text></View>
+        }*/
+        else{
+            return <View style={styles.info}><Text style={styles.infotxt}>不存在{this.props.navigation.state.params.info}相关记录</Text></View>
+        }
     }
 
+    //错误页面显示信息判断
+    handlerError=(code,Msg)=>{
+        if(code==="400"|| code==="404"||code==="444"||code==="445"|| code==="703")
+        {
+            msg="没有查到满足条件的信息";
+
+        }
+        else if(code==="1314"|| code==="1315"||code==="1316"||code==="1319"||code==="0001")
+        {
+            msg=Msg;
+        }
+        else
+        {
+            msg="查询过程中出现异常";
+        }
+        console.log(msg);
+        thiz.setState({
+            errorMsg:msg,
+            Code:code,
+        });
+    }
 }
 
 const styles =StyleSheet.create({
@@ -345,5 +470,14 @@ const styles =StyleSheet.create({
     },
     footerfont:{
         color:'black',
+    },
+    info:{
+        height:height,
+        alignItems:'center',
+        justifyContent:'center',
+
+    },
+    infotxt:{
+        fontSize:20,
     },
 });

@@ -1,9 +1,15 @@
 import config  from '../Res/Config/Config';
+import {
+    Alert
+} from 'react-native';
+import NavigationService from '../Utils/NavigationService';
 export default class getData {
+    static overTime=false;
     static overtime (fetchPromise,timeout){
         let timeoutPromise = new Promise(function (resolve,reject) {
                 setTimeout(() => {
-                    reject(new Error('请求超时！'))
+                    reject(new Error('请求超时'))
+                   // reject({"err":"请求超时"});
                 },timeout)
         });
         return Promise.race([fetchPromise,timeoutPromise])
@@ -43,52 +49,59 @@ export default class getData {
     //             console.log(error);
     //         })
     // }
-    static fetchData(url,params,callback,time,encoded){
-        let getUrl,getUrlName,getTime,getEncoded;
+    static fetchData(url,params,callback,time,encoding){
+        let getUrl,getUrlName,getTime,getEncoding;
         String.prototype.trim = function () {
            // return this.replace(/(^[\s\n\t]+|[\s\n\t]+$)/g,"");
             return this.replace(/\s+/g,"");
-        }
+        };
         if (time) {
             getTime = time;
         }else {
             getTime = config.timeout;
         }
-        if (encoded) {
-            getEncoded = encoded;
+        if (encoding) {
+            getEncoding = encoding;
         }else {
-            getEncoded = config.encoded;
+            getEncoding = config.defaultEncoding;
         }
-        if (url.indexOf(" ") == -1&&url.slice(0,1) != '/'){
-            getUrlName = url;
-        } else if (url.indexOf(" ") == -1) {
-            if (url.slice(0,1) == '/'){
-                getUrlName = url.slice(1);
-            }
-        } else if(url.indexOf(" ") != -1){
-            console.log(url.trim());
-            if (url.trim().slice(0,1) == '/'){
-                getUrlName = url.trim().slice(1);
-            }
-            //  console.log(getUrlName);
+        getUrlName = url.trim();
+        if (getUrlName.slice(0,1) === '/'){
+            getUrlName = getUrlName.slice(1);
         }
-       getUrl =  config.ip + config.path + getUrlName + config.fileType;
-       console.log(typeof getUrl);
+        getUrl =  config.ip + config.path + getUrlName + config.fileType;
+        //console.log(getUrl);
+        if (params.bankId===undefined&&params.userId===undefined){
+            params["bankId"] = config.bankId;
+            params["userId"] = config.userId;
+        }
+        console.log(params);
         this.overtime(fetch(getUrl,{
             method:'POST',
             headers:{
-                'content-type':'application/json;charset='+getEncoded
+                 'content-type':'application/json;charset='+getEncoding
             },
             body:JSON.stringify(params)
         }),getTime)
             .then((response) =>{
+               // console.log(response);
                 return response.json();
             })
             .then((responseJson) =>{
+                console.log(responseJson);
                 callback(responseJson);
+                // if (responseJson.code == 1){
+                //     NavigationService.navigator('Login')
+                // }
             })
             .catch((error) => {
-                console.log(error);
+                let err = {
+                    //"errorMsg":"http访问异常",
+                    "success":false
+                };
+                callback(err);
+                console.log(error.message);
+                //Alert.alert('提示','对方答复')
             })
     }
 }

@@ -15,20 +15,18 @@ import {
     FlatList,
     ActivityIndicator,
 } from 'react-native';
-import { MessageBox } from 'IFTide';
+import { MessageBox,Dialog,Label } from 'IFTide';
 import Fetch from "../../Fetch/DataFactories";
 import Soat from "../../Utils/JsonUtils";
 const selectMoneyData = ["不限","0-100万","100-200万","200-500万","500-1000万","1000万以上",];
 const selectTimeData = ["不限","1年内","1-5年","5-10年","10-15年","15年以上",];
 const soatData = ["按成立日期升序","按成立日期降序","按注册资本升序","按注册资本降序"];
-const REQUEST_URL = 'searchData';//请求的分页json文件
 let totalPage =3;//数据总页数
 let currentPage = 1;//当前第几页
-let params = {"pageNum":currentPage,"city":'',"Industry":'',"key":'',"size":'10',"esdateStart":'起始时间',"esdateEnd":'',"regcapGte":'起始资本',"regcapLte":''};//当前第几页
+let params = {"serviceKey": "模糊查询","reqParams":{"page":currentPage,"areaCode":'',"industryPhy":'',"key":'',"size":'10',"esdateStart":'',"esdateEnd":'',"regcapGte":'',"regcapLte":'',"enableAggregate":"true"}};//当前第几页
 export default class SearchPage extends Component {
     constructor (props) {
         super(props)
-        thiz = this;
         this.state = {
             modal:false,
             seachResult:false,
@@ -49,8 +47,13 @@ export default class SearchPage extends Component {
             selectIndustryDefault:"全部行业",
             selectIndustryIndex:'',
             refreshing:false,//当前的刷新状态
-            showFoot:0,
-            params:{"pageNum":currentPage,"key":'',"size":'10',"esdateStart":'起始时间',"esdateEnd":'',"regcapGte":'起始资本',"regcapLte":''},
+            showFoot:2,
+            msg:'',
+            vioceModal:false,
+            bluffShow:false,
+            bluffData:'trdtrrdt',
+            totalnum:0,
+            view:false,
         }
     }
     componentDidMount () {
@@ -59,63 +62,118 @@ export default class SearchPage extends Component {
       //       this.setState({data:res.data});
             //console.log(View);
       //   });
+       // console.log(this.props.navigation.state.params.info)
     }
+    //手动获取搜索结果
     getCompanyListData (){
-        Fetch.fetchData('searchDataRe',{},(res)=>{
-            this.setState({listData:res.data.companyMessage});
-            //console.log(this.state.data);
-            if (res.code === '1'){
+        params.reqParams.page = 1;
+        params.reqParams.key = this.state.searchValue;
+        this.setState({refreshing:true});
+       // console.log(params);
+       // console.log(Fetch.overTime);
+        Fetch.fetchData('jsonpost',params,(res)=>{
+           // this.setState({listData:res.data.ENTERPRISES});
+            //console.log(res);
+            if (res.success!==undefined&&res.success === false){
+                this.setState({msg:'连接超时,请重试！',refreshing:false});
+                this.alertSearch._show();
+            }
+            if (res.code === '200' || res.code === '404'){
+                this.setState({listData:res.data.ENTERPRISES,refreshing:false,totalnum:res.totalnum,data:res.data});
+            }else if(res.code === '-1'){
                 this.setState({refreshing:false});
+            }
+            if (res.totalpage>1){
+                this.setState({showFoot:0})
+            }else {
+                this.setState({showFoot:2})
+            }
+            if (res.data.ENTERPRISES != ''){
+                this.setState({soatDisable:false,view:false});
+            }else{
+                this.setState({view:true,showFoot:2})
+               // view = '<Text style={{textAlign:"center"}}>没有查询到相关数据</Text>';
             }
         });
     }
     //搜索按钮回调
     sendSearch () {
         if (this.state.searchValue === ''){
+            this.setState({msg:'搜索内容不能为空！'});
             this.alertSearch._show();
             return
         }
-        params.key = this.state.searchValue;
+        currentPage = 1;
+        params.reqParams.areaCode = '';
+        params.reqParams.industryPhy = '';
+        params.reqParams.esdateStart = '';
+        params.reqParams.esdateEnd = '';
+        params.reqParams.regcapGte = '';
+        params.reqParams.regcapLte = '';
+        this.setState({selectedMoneyActive:'',selectedTimeActive:'',selectCityDefault:'全国',selectIndustryDefault:"全部行业"});
+        if (this.props.navigation.state.params.info === '电信诈骗'){
+            Fetch.fetchData('stuff',{},(res)=>{
+                if (res.respCd === '0000'){
+                    console.log(2);
+                    this.setState({bluffShow:true});
+                    this.setState({bluffData:res.result.msg});
+                }else if(res.code === '-1'){
+
+                }
+            });
+            return
+        }
+        // if(this.state.seachResult===true){
+        //     this.getCompanyListData();
+        //     return
+        // }
         this.setState({seachResult:true});
+        this.getCompanyListData();
     };
     //键盘搜索按钮回调
     onSubmitEditing (){
         // alert(1);
         this.sendSearch();
     };
+    //清除输入框内容
     deleteSearch () {
         if (this.state.searchValue !== ''){
            // alert(1);
             this.myTextInput.clear();
+            this.setState({searchValue:''});
         }
     };
+    //打开语音搜索界面
+    openVioce (){
+        this.setState({vioceModal:true})
+    }
+    //筛选城市
     searchCitySelect (code,number) {
-        //alert(1);
-       // console.log(code.name);
         this.setState({selectCityIndex:number});
-        if (code.name.length > 4){
-            this.setState({selectCityDefault:this.fontCut(code.name)});
+        if (code.AREANAME.length > 4){
+            this.setState({selectCityDefault:this.fontCut(code.AREANAME)});
         }else{
-            this.setState({selectCityDefault:code.name});
+            this.setState({selectCityDefault:code.AREANAME});
         }
-        params.city = code.name;
+        params.reqParams.areaCode = code.AREACODE;
         console.log(params);
-       // this.getCompanyListData()
+        this.setState({modal:false,textNum:0});
+        this.getCompanyListData();
        // this.fontCut(code.name);
     };
+    //筛选行业
     searchIndustrySelect (code,number) {
-         //alert(2);
-        // console.log(1);
         this.setState({selectIndustryIndex:number});
-        if (code.name.length > 4){
-            this.setState({selectIndustryDefault:this.fontCut(code.name)});
+        if (code.INDUSTRYPHYNAME.length > 4){
+            this.setState({selectIndustryDefault:this.fontCut(code.INDUSTRYPHYNAME)});
         }else{
-            this.setState({selectIndustryDefault:code.name});
+            this.setState({selectIndustryDefault:code.INDUSTRYPHYNAME});
         }
-        params.Industry = code.name;
-        console.log(params);
-        //this.getCompanyListData()
+        params.reqParams.industryPhy = code.INDUSTRYPHY;
+        this.setState({modal:false,textNum:0});
+        this.getCompanyListData();
     };
+    //显示排序浮层
     openSoat(){
         //console.log(this.state.listData);
         // if (this.state.listData == ''){
@@ -134,6 +192,7 @@ export default class SearchPage extends Component {
         }
         //this.setState({soat:true});
     };
+    //排序选项选择
     soatOptionActive(itme,index){
        // alert(index)
         this.setState({soatOptionsActive:index});
@@ -142,13 +201,13 @@ export default class SearchPage extends Component {
             let soatData;
             // console.log(1);
             if (index === 0){
-                soatData = Soat.sort(this.state.listData,'time');
+                soatData = Soat.sort(this.state.listData,'ESDATE',index);
             }else if (index === 1){
-                soatData = Soat.sort(this.state.listData,'time',true);
+                soatData = Soat.sort(this.state.listData,'ESDATE',index,true);
             }else if (index === 2){
-                soatData = Soat.sort(this.state.listData,'money');
+                soatData = Soat.sort(this.state.listData,'REGCAP',index);
             }else if (index === 3){
-                soatData = Soat.sort(this.state.listData,'money',true);
+                soatData = Soat.sort(this.state.listData,'REGCAP',index,true);
             }
              this.setState({listData:soatData,refreshing:false});
         }
@@ -158,6 +217,7 @@ export default class SearchPage extends Component {
             getSortData();
         });
     };
+    //显示筛选条件浮层
     openSlect(num) {
        // console.log(cityData);
         this.setState({selectType:num});
@@ -168,80 +228,187 @@ export default class SearchPage extends Component {
             this.setState({textNum:num});
             this.setState({modal:true});
         }
-        const cityData = this.state.data.city;
-        const industryData = this.state.data.industry;
+        const cityData = this.state.data.AREACODECOUNT;
+        const industryData = this.state.data.INDUSTRYPHYCOUNT;
         if (num === 1){
             this.setState({searchOptionsValue:cityData});
         }else if (num === 2) {
             this.setState({searchOptionsValue:industryData});
         }
     };
+    //注册资本筛选
     slectedMoney (itme,index) {
             this.setState({selectedMoneyActive:index});
             if (index === 0){
-                params.regcapGte = '';
-                params.regcapLte = '';
+                params.reqParams.regcapGte = '';
+                params.reqParams.regcapLte = '';
             } else if (index === 1){
-                params.regcapGte = '0';
-                params.regcapLte = '100';
+                params.reqParams.regcapGte = '0';
+                params.reqParams.regcapLte = '100';
             }else if (index === 2){
-                params.regcapGte = '100';
-                params.regcapLte = '200';
+                params.reqParams.regcapGte = '100';
+                params.reqParams.regcapLte = '200';
             }else if (index === 3){
-                params.regcapGte = '200';
-                params.regcapLte = '500';
+                params.reqParams.regcapGte = '200';
+                params.reqParams.regcapLte = '500';
             }else if (index === 4){
-                params.regcapGte = '500';
-                params.regcapLte = '1000';
+                params.reqParams.regcapGte = '500';
+                params.reqParams.regcapLte = '1000';
             }else if (index === 5){
-                params.regcapGte = '1000';
-                params.regcapLte = '';
+                params.reqParams.regcapGte = '1000';
+                params.reqParams.regcapLte = '';
             }
-        console.log(params)
+       // console.log(params)
     };
+    //更多筛选确定按钮回调
+    moreButton(){
+        this.setState({modal:false,textNum:0});
+        if (params.reqParams.regcapGte===''&&params.reqParams.regcapLte===''&&params.reqParams.esdateStart===''&&params.reqParams.esdateEnd===''){
+             return;
+        }else{
+            this.getCompanyListData();
+        }
+    }
+    goSearchDetail (key){
+        let info = this.props.navigation.state.params.info;
+        if (info === ''){
+          //  console.log(key);
+            this.props.navigation.navigate('Company',{company:key})
+        }else {
+            let companyName = key.ENTNAME;
+            let companyID = key.ID;
+            let pressInformationName = this.props.navigation.state.params.info;
+            //具体请求的参数在文档里面写出，根据模块不同，配置的参数也不同。
+            if (pressInformationName === '股东信息' || pressInformationName === '法人对外投资' || pressInformationName === '企业对外任职') {
+               // console.log('1')
+                Fetch.fetchData('jsonpost', {"serviceKey":pressInformationName,
+                    "bankId":"8B94459B9F1D4ECD",
+                    "userId":"001100807",
+                    "key":companyID,
+                    "page":"1",
+                    "size":"10"},(res) => {
+                    let code = res.code;
+                    let Msg = res.msg;
+                    let Data = res.data;
+                    let ListType = res.listtype;
+                    let totalpage = res.totalpage;
+                    if(code !== "200" && code !== "0000")
+                    {
+                        // thiz.handlerError(code,Msg);
+                        // thiz.alertType1._show()
+                        this.setState({msg:Msg});
+                        this.alertSearch._show();
+                    } else {
+                        this.props.navigation.navigate('List', {info: pressInformationName, data: Data, listtype: ListType, totalpage: totalpage, key:companyID})
+                    }
+                    console.log('data', Data)
+                });
+            }else {
+                console.log('2')
+                Fetch.fetchData('jsonpost', {"serviceKey":pressInformationName,
+                    "bankId":"8B94459B9F1D4ECD",
+                    "userId":"001100807",
+                    "key":companyName,
+                    "page":"1",
+                    "size":"10"}, (res) => {
+                    let code = res.code;
+                    let Msg = res.msg;
+                    let Data = res.data;
+                    let ListType = res.listtype;
+                    let totalpage = res.totalpage;
+                    if(code !== "200" && code !== "0000")
+                    {
+                        // thiz.handlerError(code,Msg);
+                        // thiz.alertType1._show()
+                        this.setState({msg:Msg});
+                        this.alertSearch._show();
+                    } else {
+                        this.props.navigation.navigate('List', {info: pressInformationName, data: Data, listtype: ListType, totalpage: totalpage, key:companyName})
+                    }
+                    console.log('data', Data)
+                });
+
+            }
+        }
+        // this.setState({msg:'搜索内容'});
+        // this.alertSearch._show();
+        // Fetch.fetchData('fygg1', {}, function(res) {
+        //     let code = res.code;
+        //     let Msg = res.msg;
+        //     let Data = res.data;
+        //     let ListType = res.listtype;
+        //     let totalpage = res.totalpage;
+        //     if(code === '0')
+        //     {
+        //         this.setState({msg:'搜索内容不能为空！'});
+        //         this.alertSearch._show();
+        //     } else {
+              //  this.props.navigation.navigate('List', {info: pressInformationName, data: Data, listtype: ListType, totalpage: totalpage})
+            //}
+            // console.log('data', Data)
+       // });
+       // this.props.navigation.navigate('Company',{companyName:item.ENTNAME,info:this.props.navigation.state.params.info})
+    }
+    //注册时间筛选
     slectedTime (itme,index) {
+        let newTime = new Date();
+        let year = newTime.getFullYear();
+        let month = newTime.getMonth()+1;
+        let day = newTime.getDate();
+        if (month<10){
+            month = "0" + month;
+        }
+        if (day<10){
+            day = "0" + day;
+        }
+        if (month === "02"&&day === "29"){
+            day = "28";
+        }
+        const oneYear = year-1 + "-" + month + "-" + day;
+        const fiveYear = year-5 + "-" + month + "-" + day;
+        const tenYear = year-10 + "-" + month + "-" + day;
+        const fifteenYear = year-15 + "-" + month + "-" + day;
+       // console.log(oneYear,fiveYear,fiveYear,fifteenYear);
         this.setState({selectedTimeActive:index});
         if (index === 0){
-            params.esdateStart = '';
-            params.esdateEnd = '';
+            params.reqParams.esdateStart = '';
+            params.reqParams.esdateEnd = '';
         } else if (index === 1){
-            params.esdateStart = '';
-            params.esdateEnd = '1';
+            params.reqParams.esdateStart = oneYear;
+            params.reqParams.esdateEnd = '';
         }else if (index === 2){
-            params.esdateStart = '1';
-            params.esdateEnd = '5';
+            params.reqParams.esdateStart = fiveYear;
+            params.reqParams.esdateEnd = oneYear;
         }else if (index === 3){
-            params.esdateStart = '5';
-            params.esdateEnd = '10';
+            params.reqParams.esdateStart = tenYear;
+            params.reqParams.esdateEnd = fiveYear;
         }else if (index === 4){
-            params.esdateStart = '10';
-            params.esdateEnd = '15';
+            params.reqParams.esdateStart = fifteenYear;
+            params.reqParams.esdateEnd = tenYear;
         }else if (index === 5){
-            params.esdateStart = '15';
-            params.esdateEnd = '';
+            params.reqParams.esdateStart = '';
+            params.reqParams.esdateEnd = fifteenYear;
         }
-        console.log(params)
     };
     getView = ({item}) => {
         //返回每个itemthis.props.navigation.navigate('Company')
         return(<TouchableWithoutFeedback
-
-            onPress={()=>{this.props.navigation.navigate('Company',{companyName:item.cname})}}
+            onPress={()=>{this.goSearchDetail(item)}}
         >
             <View style={styles.seachResultList}>
                 <View style={styles.seachResultListTitle}>
                     <Text style={styles.seachResultListTitleText}>
-                        {item.cname}
+                        {item.ENTNAME}
                     </Text>
                     <View style={styles.seachResultListTitleRight}>
                         <Text style={styles.seachResultListTitleRightText}>
-                            {item.status}
+                            {item.ENTSTATUS}
                         </Text>
                     </View>
                 </View>
                 <View style={styles.seachResultListCode}>
                     <Text style={styles.seachResultListCodeText}>
-                        统一社会信用代码 : {item.code}
+                        统一社会信用代码 : {item.CREDITCODE}
                     </Text>
                 </View>
                 <View style={styles.seachResultListMessage}>
@@ -250,7 +417,7 @@ export default class SearchPage extends Component {
                             法定代表人
                         </Text>
                         <Text style={styles.seachResultListNameText}>
-                            {item.NAME}
+                            {item.NAME.length>6?item.NAME.slice(0,6) + '...':item.NAME}
                         </Text>
                     </View>
                     <View style={styles.seachResultListMessageInnerBottom}>
@@ -261,10 +428,10 @@ export default class SearchPage extends Component {
                         </View>
                         <View style={styles.seachResultListMessageCenterText}>
                             <Text style={styles.seachResultListCodeText}>
-                                注册资本
+                                注册资本(万元)
                             </Text>
                             <Text style={styles.seachResultListMoneyText}>
-                                {item.money}
+                                {item.REGCAP}
                             </Text>
                         </View>
                         <View>
@@ -278,7 +445,7 @@ export default class SearchPage extends Component {
                             注册时间
                         </Text>
                         <Text style={styles.seachResultListTimeText}>
-                            {item.time}
+                            {item.ESDATE}
                         </Text>
                     </View>
                 </View>
@@ -310,36 +477,57 @@ export default class SearchPage extends Component {
     }
     //请求上拉加载数据
     onEndReached  =() => {
+
         if (this.state.listData.length >= 100){
             return
         }
-       // console.log(params);
-       let pageNum = 1;
-        Fetch.fetchData(REQUEST_URL,{},(res) => {
-           let foot = 0;
-           if(pageNum>=totalPage){
-               foot =1;//底部显示没有更多数据
-           }
-            //console.log(res);
-            this.setState({
-                listData:this.state.listData.concat(res.data.companyMessage),
-                data:res.data
-            });
+        currentPage++;
+       // this.setState({refreshing:true});
+        // if (this.state.showFoot === 0){
+        //     this.setState({refreshing:false});
+        // }
+        params.reqParams.page = currentPage;
+        if (this.state.data.totalpage&&this.state.data.totalpage !== undefined){
+            if(currentPage == this.state.data.totalpage){
+                this.setState({showFoot:1});//底部显示没有更多数据
+            }else if(currentPage>this.state.data.totalpage){
+                return
+            }
+        }
+       // params.reqParams.key = this.state.searchValue;
+        Fetch.fetchData('jsonpost',params,(res) => {
+           // console.log(currentPage);
+         // console.log(res);
+            if (res.success!==undefined&&res.success === false){
+                this.setState({msg:'连接超时,请重试！'});
+                this.alertSearch._show();
+            }
+          if (res.code === '200'){
+              this.setState({
+                  listData:this.state.listData.concat(res.data.ENTERPRISES),
+                 // data:res.data,
+                  totalnum:res.totalnum,
+              });
+          }else if(res.code === '-1'){
+              this.setState({refreshing:false});
+             // alert('服务器内部错误！')
+          }
            if (this.state.listData != ''){
                this.setState({soatDisable:false});
            }
-        })
+         })
     };
     //下拉刷新方法
     onRefresh =() =>{
         //设置刷新状态为正在刷新
-        this.setState({
-            refreshing:true,
-        },()=>{
-            this.getCompanyListData();
-        });
-
+        // this.setState({
+        //     refreshing:true,
+        // },()=>{
+        //     this.getCompanyListData();
+        // });
+        this.getCompanyListData();
     };
+    //设置搜索结果列表的key值
     _keyExtractor(item,index){
         return "index"+item+index;
     }
@@ -353,15 +541,20 @@ export default class SearchPage extends Component {
     //     return getItemLayout(data,index,false);
     // };
     render() {
-        //const { state: {params}} = this.props.navigation;
-        const selectOptions = this.state.searchOptionsValue?this.state.searchOptionsValue.map((itme,index)=>{
+        let placeholder;
+        if (this.props.navigation.state.params.info === '电信诈骗'){
+            placeholder = '请输入要查询的卡账号';
+        }else{
+            placeholder = "请输入企业名称,人名,品牌等";
+        }
+        const selectOptions = this.state.searchOptionsValue.length?this.state.searchOptionsValue.map((itme,index)=>{
             return(<TouchableWithoutFeedback
                 onPress={()=>{this.state.selectType === 1?this.searchCitySelect(itme,index):this.searchIndustrySelect(itme,index)}}
                 key={index}
             >
                 <View style={[styles.scrollViewInnerButton,this.state.selectType === 1?this.state.selectCityIndex===index&&styles.scrollViewInnerButtonBg:this.state.selectIndustryIndex===index&&styles.scrollViewInnerButtonBg]}>
                     <Text >
-                        {itme.name}
+                        {this.state.selectType === 1?itme.AREANAME:itme.INDUSTRYPHYNAME}
                     </Text>
                 </View>
             </TouchableWithoutFeedback>)
@@ -411,6 +604,17 @@ export default class SearchPage extends Component {
                     </View>
                 </View>
             </View>
+            <TouchableWithoutFeedback
+                onPress={()=>{this.moreButton()}}
+            >
+                <View style={styles.moreButtonWrapper}>
+                    <View style={styles.moreButton}>
+                        <Text style={styles.moreButtonText}>
+                             确认
+                        </Text>
+                    </View>
+                </View>
+            </TouchableWithoutFeedback>
         </View>);
         return (
             <View style={styles.container}>
@@ -432,19 +636,19 @@ export default class SearchPage extends Component {
                         </TouchableOpacity>
                         <TextInput style={styles.textInput}
                                    ref={(ref)=>{this.myTextInput = ref}}
-                                   placeholder = "请输入企业名称,人名,品牌等"
+                                   placeholder = {placeholder}
                                    placeholderTextColor = "#bbbbbb"
                                    underlineColorAndroid = 'transparent'
                                    returnKeyType = "search"
                                    onSubmitEditing={()=>{this.onSubmitEditing()}}
-                                  // returnKeyLabel={}
+                                  // returnKeyLabel={}"请输入企业名称,人名,品牌等"
                                    onChangeText ={(text) => {this.setState({searchValue:text})}}
                         />
                         <TouchableOpacity
                             style={styles.searchDeleteButtonBox}
-                            onPress={()=>{this.deleteSearch()}}
+                            onPress={()=>{this.state.searchValue===''?this.openVioce():this.deleteSearch()}}
                         >
-                            <Image style={styles.userImg} source={require('../../Res/Images/delete.png')} />
+                            <Image style={styles.userImg} source={this.state.searchValue===''?require('../../Res/Images/yuyin.png'):require('../../Res/Images/delete.png')} />
                         </TouchableOpacity>
                     </View>
                     <View >
@@ -457,6 +661,11 @@ export default class SearchPage extends Component {
                             </Text>
                         </TouchableOpacity>
                     </View>
+                </View>
+                <View style={!this.state.bluffShow&&styles.bluff}>
+                    <Text>
+                        {this.state.bluffData}
+                    </Text>
                 </View>
                 {/*历史记录开始*/}
                 {/*<View style={styles.searchSpace}>*/}
@@ -533,7 +742,7 @@ export default class SearchPage extends Component {
                     </View>
                     <View style={styles.seachResultCount}>
                         <Text style={styles.seachResultCountText}>
-                            搜索到<Text style={styles.seachResultCountTextColor}>超过5000个</Text>公司<Text style={styles.seachListRule}>(最多显示100条)</Text>
+                            搜索到<Text style={styles.seachResultCountTextColor}>{this.state.totalnum}</Text>家公司<Text style={styles.seachListRule}>(最多显示100条)</Text>
                         </Text>
                         {/*<Text style={styles.seachResultCountPage}>*/}
                             {/*第<Text>1</Text>/<Text>125</Text>页*/}
@@ -547,6 +756,7 @@ export default class SearchPage extends Component {
                             keyExtractor={this._keyExtractor}
                             renderItem={this.getView}//渲染每一条记录
                             // getItemLayout={this._getItemLoyout}
+                            ListEmptyComponent={this.state.view?<Text style={{textAlign:"center"}}>没有查询到相关数据</Text>:''}
                             ListFooterComponent={this.footer}//尾部
                             //下拉刷新，必须设置refreshing状态
                             onRefresh={this.onRefresh}
@@ -560,17 +770,22 @@ export default class SearchPage extends Component {
                     <TouchableWithoutFeedback
                         onPress={()=>{this.setState({modal:false,textNum:0})}}
                     >
-                    <View style={[styles.seachValue,this.state.modal?styles.seachValueModalYes:styles.seachValueModalNo]}>
-                        <View style={styles.scrollViewContainer}>
-                            <View style={this.state.selectType === 3?styles.scrollViewInnerMore:styles.scrollViewInner}>
-                                <ScrollView
-                                    showsVerticalScrollIndicator = {false}
-                                >
-                                    {this.state.selectType === 3?selectTimeOrMoney:selectOptions}
-                                </ScrollView>
-                            </View>
+                        <View style={[styles.seachValue,this.state.modal?styles.seachValueModalYes:styles.seachValueModalNo]}
+                            //  View.props.onStartShouldSetResponderCapture:{(evt)=> true }
+                        >
+                            <TouchableWithoutFeedback
+                            >
+                                <View style={styles.scrollViewContainer}>
+                                    <View style={this.state.selectType === 3?styles.scrollViewInnerMore:styles.scrollViewInner}>
+                                        <ScrollView
+                                            showsVerticalScrollIndicator = {false}
+                                        >
+                                            {this.state.selectType === 3?selectTimeOrMoney:selectOptions}
+                                        </ScrollView>
+                                    </View>
+                                </View>
+                            </TouchableWithoutFeedback>
                         </View>
-                    </View>
                     </TouchableWithoutFeedback>
                 </View>
                 <TouchableWithoutFeedback
@@ -593,11 +808,29 @@ export default class SearchPage extends Component {
                         </View>
                     </View>
                 </TouchableWithoutFeedback>
+                <Modal
+                transparent={true}
+                visible={this.state.vioceModal}
+                onRequestClose={()=>{}}
+                >
+                    <TouchableWithoutFeedback
+                        onPress={()=>{this.setState({vioceModal:false})}}
+                    >
+                        <View style={styles.vioceModalStyle}>
+                            <View style={styles.vioceContainer}>
+                                <Text style={styles.vioceTitle}>
+                                    语音识别中...
+                                </Text>
+                                <Image style={styles.viocingImg}  source={require('../../Res/Images/yuyinr.png')} />
+                            </View>
+                        </View>
+                    </TouchableWithoutFeedback>
+                </Modal>
                 <MessageBox
                     ref={(obj) =>{this.alertSearch = obj}}
                     alertType = {1}
                     title={'提示'}
-                    detailText={'搜索内容不能为空！'}
+                    detailText={this.state.msg}
                     onClose={() => {
                     }}
                 />
@@ -742,10 +975,7 @@ const styles = StyleSheet.create({
         display:'none'
     },
     seachSelect:{
-       // flex:1,
         width:'100%',
-       // position:'relative',
-       // top:20,
        height:60,
        flexDirection:'row',
        alignItems: 'center',
@@ -755,7 +985,7 @@ const styles = StyleSheet.create({
     },
     seachSelectDetial:{
         flex:1,
-        backgroundColor: 'red',
+       // backgroundColor: 'red',
     },
     seachSelectInner:{
         flex:1,
@@ -796,8 +1026,6 @@ const styles = StyleSheet.create({
     },
     seachResultList:{
         paddingTop:20,
-        paddingLeft:40,
-        paddingRight:10,
         paddingBottom:20,
         marginBottom:10,
         backgroundColor: 'white',
@@ -805,26 +1033,33 @@ const styles = StyleSheet.create({
     seachResultListTitleRight:{
         borderWidth:1,
         borderColor:'#67c94d',
-        paddingRight:6,
-        paddingLeft:10,
+        paddingRight:4,
+        paddingLeft:8,
+        alignItems: 'center',
         paddingBottom:1,
         paddingTop:1,
+        marginRight:10,
         borderRadius:4,
+        //backgroundColor: 'blue',
     },
     seachResultListTitleRightText:{
         color:'#67c94d'
     },
     seachResultListTitle:{
+        paddingLeft:20,
         flexDirection:'row',
         alignItems: 'center',
         justifyContent: 'space-between',
     },
     seachResultListTitleText:{
+        flex:1,
         fontSize: 20,
         color:'#333333',
+       // backgroundColor: 'red',
     },
     seachResultListCode:{
         paddingTop:10,
+        paddingLeft:20,
     },
     seachResultListCodeText:{
         fontSize: 16,
@@ -839,14 +1074,17 @@ const styles = StyleSheet.create({
         color:'#333333',
     },
     seachResultListMessage:{
+       // flex:1,
         paddingTop:10,
         flexDirection:'row',
         alignItems: 'center',
+       // backgroundColor: 'red',
     },
     seachResultListMessageLeftInner:{
-        paddingRight:10,
+        flex:1,
+       // paddingRight:10,
         alignItems: 'center',
-        // backgroundColor: 'red',
+       // backgroundColor: 'red',
     },
     seachResultListNameText:{
         fontSize: 16,
@@ -857,8 +1095,10 @@ const styles = StyleSheet.create({
        // color:'#1abef9',
     },
     seachResultListMessageInnerBottom:{
+        flex:1,
         flexDirection:'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
        // backgroundColor: 'blue',
     },
     seachResultListMessageCenterText:{
@@ -867,8 +1107,9 @@ const styles = StyleSheet.create({
            alignItems: 'center',
     },
     seachResultListMessageRightInner:{
-        paddingLeft:10,
+        flex:1,
         alignItems: 'center',
+       // backgroundColor: 'yellow',
     },
     seachResultListSpaceText:{
            fontSize: 20,
@@ -895,6 +1136,8 @@ const styles = StyleSheet.create({
     selectMoreTimeWrapper:{
           borderTopColor:"#f0f0f0",
           borderTopWidth:1,
+          borderBottomWidth:1,
+          borderBottomColor:"#f0f0f0",
     },
     selectMorePublicInner:{
         width:'92%',
@@ -933,7 +1176,11 @@ const styles = StyleSheet.create({
     },
     scrollViewInnerButton:{
         width:'100%',
-        height:40,
+        //height:40,
+        paddingTop:6,
+        paddingBottom:6,
+        paddingLeft:10,
+        paddingRight:10,
         alignItems: 'center',
         justifyContent: 'center',
         //backgroundColor: 'red',
@@ -986,6 +1233,47 @@ const styles = StyleSheet.create({
     },
     sortOptionsActive:{
         backgroundColor:'#F0F0F0',
+    },
+    vioceModalStyle:{
+        flex:1,
+        justifyContent:'center',
+        alignItems:'center',
+        backgroundColor:'rgba(55,55,55,0.2)',
+    },
+    vioceContainer:{
+        width:'80%',
+        height:220,
+        justifyContent:'center',
+        alignItems:'center',
+        backgroundColor:'rgba(0,0,0,0.4)',
+        borderRadius:8,
+    },
+    vioceTitle:{
+        fontSize:18,
+    },
+    bluff:{
+        display:'none',
+    },
+    moreButtonWrapper:{
+        width:'100%',
+        marginTop:56,
+        alignItems:'center',
+    },
+    moreButton:{
+        width:'90%',
+        height:46,
+        alignItems:'center',
+        justifyContent:'center',
+        borderRadius:6,
+        backgroundColor:'#1abef9'
+    },
+    viocingImg:{
+        width:154,
+        height:154
+    },
+    moreButtonText:{
+        fontSize:16,
+        color:"#ffffff"
     },
 });
 

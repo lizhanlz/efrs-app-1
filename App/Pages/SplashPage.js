@@ -1,12 +1,15 @@
 import React, { Component } from 'react';
 import {
     StyleSheet,
-    Text,
     View,
     Image,
     Animated,
     Easing,
 } from 'react-native';
+// 获取屏幕高宽度
+const Dimensions = require("Dimensions");
+const { height, width } = Dimensions.get('window');
+
 export default class HomePage extends Component {
     constructor(props) {
         super(props);
@@ -24,13 +27,13 @@ export default class HomePage extends Component {
             }
         ).start();
         setTimeout(() => {
-            this.props.navigation.navigate('Main')
-        }, 100)
+            this.props.navigation.navigate('Home')
+        }, 2000)
     }
     render() {
         return (
             <View style = {styles.container}>
-                <Text style = {styles.welcome}>欢迎界面</Text>
+                <Image source = {require('../Res/Images/启动.png')} style = {styles.image} resizeMode = {'stretch'}/>
             </View>
         )
     }
@@ -39,11 +42,11 @@ export default class HomePage extends Component {
 
 const styles = StyleSheet.create({
     container: {
+        flex: 1,
         backgroundColor: '#F5FCFF',
     },
-    welcome: {
-        fontSize: 20,
-        textAlign: 'center',
-        margin: 10,
+    image: {
+        height:height,
+        width:width
     },
 })

@@ -20,10 +20,10 @@ export default class MinePage extends Component {
         }
     }
     componentDidMount () {
-      Fetch.fetchData('/usermessage',{},(res)=>{
-          this.setState({userData:res});
-          console.log(this.state.userData.data.jigou);
-      })
+      // Fetch.fetchData('usermessage',{},(res)=>{
+      //     this.setState({userData:res});
+      //     console.log(this.state.userData.data.jigou);
+      // })
     }
     userMessage (item){
         this.props.navigation.navigate('Login');

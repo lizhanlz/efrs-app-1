@@ -14,7 +14,6 @@ export default class CommonDetailPage extends Component {
 
     static navigationOptions = ({ navigation }) => {
         return {
-           
             title: '详情',
             headerTitleStyle: {
                 textAlign: 'center',
@@ -23,7 +22,7 @@ export default class CommonDetailPage extends Component {
             },
             headerRight: (<View></View>)
         }
-    }
+    };
 
 
     constructor(props){
@@ -107,6 +106,7 @@ export default class CommonDetailPage extends Component {
                         ListHeaderComponent = {this._header} // 组件头部
                         refreshing = {false}  // 在等待加载时是否显示一个正在加载的符号
                         keyExtractor = {this._extraUniqueKey}  //给每个item生成一个key
+                        ListFooterComponent={this._footer}//尾部
                     />
                 </View>
 
@@ -124,6 +124,7 @@ export default class CommonDetailPage extends Component {
                         keyExtractor = {this._extraUniqueKey}  //给每个item生成一个key
                         SectionSeparatorComponent = {this._SectionSeparatorComponent} // section之间的间隔函数
                         ItemSeparatorComponent = {this._ItemSeparatorComponent} // item之间的间隔函数
+                        ListFooterComponent={this._footer}//尾部
                     />
                 </View>
             )
@@ -131,10 +132,6 @@ export default class CommonDetailPage extends Component {
         }
     };
     componentDidMount() {
-        // let newArray = JSON.parse(JSON.stringify(this.trueCellDataArray))
-        // this.setState({
-        //     cellDataArray: newArray,
-        // });
 
     };
     _renderItem = (Item) => {
@@ -253,13 +250,18 @@ export default class CommonDetailPage extends Component {
         // 判断是否有头部
         if (thiz.props.headerName){
             return  <View style = { styles.header }>
-                <Text style = { styles.txt }>{thiz.props.headerName}</Text>
-            </View>
+                        <Text style = { styles.txt }>{thiz.props.headerName}</Text>
+                    </View>
         } else {
             return null
         }
     }
 
+
+    _footer() {
+        return  <View style = {styles.footer}>
+                </View>
+    }
 
 
 
@@ -280,8 +282,11 @@ const styles = StyleSheet.create({
 
     },
     header: {
-        backgroundColor: '#E6E6FA',
+        backgroundColor: '#FFFFFF',
 
+    },
+    footer: {
+        height: 20,
     },
     innerViewStyle: {
         backgroundColor: 'white',
@@ -315,9 +320,10 @@ const styles = StyleSheet.create({
     },
     SectionHeader: {
         height: 50,
-        backgroundColor: '#9CEBBC',
-        color: 'white',
+        backgroundColor: '#FFFFFF',
         fontSize: 18,
+        color: '#333333',
+
     },
     sectionValue: {
         fontSize: 13,

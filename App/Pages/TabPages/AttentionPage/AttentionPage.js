@@ -14,7 +14,7 @@ export default class AttentionPage extends Component {
         return (
             <View style={styles.container}>
                 <Text style={styles.welcome}>
-                    关注
+                    敬请期待
                 </Text>
             </View>
         )

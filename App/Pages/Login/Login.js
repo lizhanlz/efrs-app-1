@@ -2,6 +2,7 @@
 import React, { Component } from 'react';
 
 import {
+    NetInfo,
     StyleSheet,
     Text,
     View,
@@ -27,6 +28,11 @@ export default class MinePage extends Component {
     componentDidMount () {
             // AsyncStorage.setItem('token','112');
             // console.log(1);
+        NetInfo.isConnected.addEventListener('connectionChange',this.getNetworkStatus())
+    }
+    getNetworkStatus(isConnected){
+       // console.log(1);
+        console.log(isConnected?'yes':'no');
     }
     onPress ()  {
         if (this.state.userName === ''){
@@ -41,43 +47,41 @@ export default class MinePage extends Component {
             let logJson = {};
             logJson['userName'] = this.state.userName;
             logJson['passWord'] = this.state.passWord;
-           Fetch.fetchData('Login',logJson,(res)=>{
-               if (res.code === '1'){
-                   this.setState({disable:false});
-                   AsyncStorage.setItem('token','112');
-                   this.setState({backText:'用户名错误！'})
-                   this.props.navigation.navigate('Mine');
-               }
-           });
-           // fetch('http://84.232.237.87:8080/efrsapp/app/MyJson/jsonpost.do',{
-           //      method:'POST',
-           //      headers:{
-           //          'content-type':'application/json;charset=UTF-8'
-           //      },
-           //      body:JSON.stringify({
-           //          "serviceKey":"裁判文书",
-           //          "bankId":"23FE904471DEB429",
-           //          "userId":"888899998",
-           //          "key":"中国工商银行股份有限公司",
-           //          "page":"1",
-           //          "size":"10"
-           //      })
-           //  })
-           //      .then((response) =>{
-           //         JSON.parse(response._bodyInit)
-           //          console.log(response);
-           //          console.log(JSON.parse(response._bodyInit));
-           //         return response.json();
-           //      })
-           //      .then((responseJson) =>{
-           //         console.log(responseJson);
-           //          if (responseJson.code == 1){
-           //              NavigationService.navigator('Login')
-           //          }
-           //      })
-           //      .catch((error) => {
-           //          console.log(error);
-           //      })
+           // Fetch.fetchData('Login',logJson,(res)=>{
+           //     if (res.code === '1'){
+           //         this.setState({disable:false});
+           //         AsyncStorage.setItem('token','112');
+           //         this.setState({backText:'用户名错误！'})
+           //         this.props.navigation.navigate('Mine');
+           //     }
+           // });
+           fetch('http://84.232.237.87:8081/efrsapp/app/json/jsonpost.do',{
+                method:'POST',
+                headers:{
+                    'content-type':'application/json;charset=UTF-8'
+                },
+                body:JSON.stringify({
+                    "serviceKey":"裁判文书",
+                    "bankId":"23FE904471DEB429",
+                    "userId":"888899998",
+                    "key":"中国工商银行股份有限公司",
+                    "page":"1",
+                    "size":"10"
+                })
+            })
+                .then((response) =>{
+                    console.log(response);
+                   return response.json();
+                })
+                .then((responseJson) =>{
+                   console.log(responseJson);
+                    if (responseJson.code == 1){
+                      //  NavigationService.navigator('Login')
+                    }
+                })
+                .catch((error) => {
+                    console.log(error.onerror);
+                })
         }
     }
     render() {

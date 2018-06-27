@@ -59,7 +59,7 @@ export default class HomePage extends Component {
                             <Image source={require('../../../Res/Images/line.png')} style={styles.line}/>
                             <Image source={require('../../../Res/Images/title.png')} style={styles.title}/>
                         </View>
-                        <TouchableOpacity activeOpacity={1} onPress={() => this.props.navigation.navigate('Search')}>
+                        <TouchableOpacity activeOpacity={1} onPress={() => this.props.navigation.navigate('Search',{info:''})}>
                             <View style={styles.searchBox}>
                                 <Image source={require('../../../Res/Images/search.png')} style={styles.searchIcon}/>
                                 <TextInput underlineColorAndroid="transparent" placeholder="请输入企业名称"
@@ -98,8 +98,8 @@ export default class HomePage extends Component {
     }
     //跳转到搜索页
     _onPressFn () {
-        this.props.navigation.navigate('Search')
-        console.log(this.refs.Sudoku.state.name)
+        this.props.navigation.navigate('Search',{info: this.refs.Sudoku.state.name})
+        //console.log(this.refs.Sudoku.state.name)
     };
     itemClick (){
 

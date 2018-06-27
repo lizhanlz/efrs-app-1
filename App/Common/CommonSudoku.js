@@ -15,8 +15,10 @@ const cols = 4;  // 列数
 const cellWidth = width / 4;  // 元素宽度
 
 
-
 export default class CommonSudoku extends Component {
+    static defaultProps = {
+        height: 110,
+    }
 
     constructor (props) {
         super(props);
@@ -24,6 +26,7 @@ export default class CommonSudoku extends Component {
         this.state = {
             name: '',
         }
+
     }
     render() {
 
@@ -47,9 +50,7 @@ export default class CommonSudoku extends Component {
             </View>
         )
     }
-    componentDidMount() {
-
-
+    componentWillMount() {
     }
 
 
@@ -61,7 +62,12 @@ export default class CommonSudoku extends Component {
         if (name === '全部') {
             return (
                 <TouchableOpacity onPress={this.props.onPressFnMore}>
-                    <View style = { styles.innerViewStyle }>
+                    <View style = {{
+                        height: this.props.height,
+                        width: cellWidth,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}>
                         <Image source = {image} style = { styles.image } resizeMode = {'contain'}/>
                         <Text style = { styles.txt }>
                             { name }
@@ -80,7 +86,12 @@ export default class CommonSudoku extends Component {
                             this.props.onPressFn()
                         })
                     }}>
-                        <View style = { styles.innerViewStyle }>
+                        <View style = {{
+                            height: this.props.height,
+                            width: cellWidth,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                        }}>
                             <Image source = { image } style = { styles.image } resizeMode = {'contain'}/>
                             <Text style = { styles.txt }>
                                 { name }
@@ -98,7 +109,12 @@ export default class CommonSudoku extends Component {
                             this.props.onPressFnDetail()
                         })
                     }}>
-                        <View style = { styles.innerViewStyle }>
+                        <View style = {{
+                            height: this.props.height,
+                            width: cellWidth,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                        }}>
                             <Image source={image} style = { styles.image } resizeMode = {'contain'}/>
                             <Text style = { styles.txt }>
                                 { name }
@@ -110,7 +126,12 @@ export default class CommonSudoku extends Component {
             } else {
                 // 图标不可点，没有数据
                 return (
-                    <View style = { styles.innerViewStyle }>
+                    <View style = {{
+                        height: this.props.height,
+                        width: cellWidth,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}>
                         <Image source={image} style = { styles.image1 } resizeMode = {'contain'}/>
                         <Text style = { styles.txt }>
                             { name }
@@ -145,15 +166,14 @@ export default class CommonSudoku extends Component {
 
 }
 
+
+
+
 const styles = StyleSheet.create({
     container: {
         height: 10,
     },
     innerViewStyle: {
-        height: 110,
-        width: cellWidth,
-        justifyContent: 'center',
-        alignItems: 'center',
     },
     txt: {
 

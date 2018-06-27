@@ -7,17 +7,19 @@ import {
     StyleSheet,
     Text,
     View,
-    Button,
     ScrollView,
+    Alert
 
 } from 'react-native';
 import CommonSudoku from '../../Common/CommonSudoku';
-
+import {MessageBox} from 'IFTide';
 import Fetch from "../../Fetch/DataFactories";
 
 
 import { RiskSudokuData } from "../../Res/Data/RiskSudoku";
 import { InformationSudokuData } from "../../Res/Data/InformationSudoku";
+
+let pageNo = "0";
 
 
 export default class CompanyPagePage extends Component {
@@ -32,21 +34,19 @@ export default class CompanyPagePage extends Component {
             },
             headerRight: (<View></View>)
         }
-    }
+    };
 
     constructor(props){
         super(props);
-        thiz=this;
         this.state = {
             RiskData:[],//存储列表数据
             RiskType:[], //存储九宫格跳转类型
             InformationData:[],//存储列表数据
             InformationType:[], //存储九宫格跳转类型
-            data: [],
+            ErrorMsg: '',
         };
     }
     componentWillMount() {
-        this.getCompanyListData()
 
         //获取data数据
         this.setState({
@@ -59,17 +59,26 @@ export default class CompanyPagePage extends Component {
 
     render() {
         const { state: {params}} = this.props.navigation
-        let data = this.state.data
+        let data = this.props.navigation.state.params.company
+        console.log(data)
         return (
+            <View>
+                <MessageBox
+                    ref={(obj) =>{this.alertType1 = obj}}
+                    alertType = {1}
+                    title={'提示'}
+                    detailText={this.state.ErrorMsg}
+                    onClose={() => {}}
+                />
                 <ScrollView style={styles.container}>
                     <View style={styles.seachResultList}>
                         <View style={styles.seachResultListTitle}>
                             <Text style={styles.seachResultListTitleText}>
-                                {data.cname}
+                                {data.ENTNAME}
                             </Text>
                             <View style={styles.seachResultListTitleRight}>
                                 <Text style={styles.seachResultListTitleRightText}>
-                                    {data.status}
+                                    {data.ENTSTATUS}
                                 </Text>
                             </View>
                         </View>
@@ -79,7 +88,7 @@ export default class CompanyPagePage extends Component {
                                     法定代表人
                                 </Text>
                                 <Text style={styles.seachResultListNameText}>
-                                    {data.NAME}
+                                    {data.NAME.length>6?data.NAME.slice(0,6) + '...':data.NAME}
                                 </Text>
                             </View>
                             <View style={styles.seachResultListMessageInnerBottom}>
@@ -93,7 +102,7 @@ export default class CompanyPagePage extends Component {
                                         注册资本
                                     </Text>
                                     <Text style={styles.seachResultListMoneyText}>
-                                        {data.money}
+                                        {data.REGCAP}
                                     </Text>
                                 </View>
                                 <View>
@@ -107,7 +116,7 @@ export default class CompanyPagePage extends Component {
                                     注册时间
                                 </Text>
                                 <Text style={styles.seachResultListTimeText}>
-                                    {data.time}
+                                    {data.ESDATE}
                                 </Text>
                             </View>
                         </View>
@@ -149,23 +158,112 @@ export default class CompanyPagePage extends Component {
                     </View>
 
                 </ScrollView>
+            </View>
         )
     }
-    //跳转到搜索页
+    //跳转到列表页
     _onPressFn1 () {
-        this.props.navigation.navigate('List', {info:this.refs.RiskSudoku.state.name})
-        console.log(this.refs.RiskSudoku.state.name)
+        let thiz = this;
+        let companyName = this.props.navigation.state.params.company.ENTNAME
+        let pressRiskName = this.refs.RiskSudoku.state.name;
+        //具体请求的参数在文档里面写出，根据模块不同，配置的参数也不同。
+        Fetch.fetchData('jsonpost', {"serviceKey":pressRiskName,
+            "bankId":"8B94459B9F1D4ECD",
+            "userId":"001100807",
+            "key":companyName,
+            "page":pageNo,
+            "size":"10"}, function(res) {
+            let code = res.code;
+            let Msg = res.msg;
+            let Data = res.data;
+            let ListType = res.listtype;
+            let totalpage = res.totalpage;
+            if(code !== "200" && code !== "0000")
+            {
+                thiz.handlerError(code,Msg);
+                thiz.alertType1._show()
+            } else {
+                thiz.props.navigation.navigate('List', {info: pressRiskName, data: Data, listtype: ListType, totalpage: totalpage, key:companyName})
+            }
+            console.log('data', res)
+
+        })
+
     };
     _onPressFn2 () {
-        this.props.navigation.navigate('List', {info:this.refs.InformationSudoku.state.name})
-        console.log(this.refs.InformationSudoku.state.name)
+        let thiz = this;
+        let companyName = this.props.navigation.state.params.company.ENTNAME;
+        let companyID = this.props.navigation.state.params.company.ID;
+        let pressInformationName = this.refs.InformationSudoku.state.name;
+        //具体请求的参数在文档里面写出，根据模块不同，配置的参数也不同。
+        if (pressInformationName === '股东信息' || pressInformationName === '法人对外投资' || pressInformationName === '对外任职') {
+            console.log('1')
+            Fetch.fetchData('jsonpost', {"serviceKey":pressInformationName,
+                "bankId":"8B94459B9F1D4ECD",
+                "userId":"001100807",
+                "key":companyID,
+                "page":pageNo,
+                "size":"10"}, function(res) {
+                let code = res.code;
+                let Msg = res.msg;
+                let Data = res.data;
+                let ListType = res.listtype;
+                let totalpage = res.totalpage;
+                if(code !== "200" && code !== "0000")
+                {
+                    thiz.handlerError(code,Msg);
+                    thiz.alertType1._show()
+                } else {
+                    thiz.props.navigation.navigate('List', {info: pressInformationName, data: Data, listtype: ListType, totalpage: totalpage, key:companyID})
+                }
+                console.log('data', Data)
+            });
+
+        } else {
+            console.log('2')
+            Fetch.fetchData('jsonpost', {"serviceKey":pressInformationName,
+                "bankId":"8B94459B9F1D4ECD",
+                "userId":"001100807",
+                "key":companyName,
+                "page":pageNo,
+                "size":"10"}, function(res) {
+                let code = res.code;
+                let Msg = res.msg;
+                let Data = res.data;
+                let ListType = res.listtype;
+                let totalpage = res.totalpage;
+                if(code !== "200" && code !== "0000")
+                {
+                    thiz.handlerError(code,Msg);
+                    thiz.alertType1._show()
+                } else {
+                    thiz.props.navigation.navigate('List', {info: pressInformationName, data: Data, listtype: ListType, totalpage: totalpage, key:companyName})
+                }
+                console.log('data', Data)
+            });
+
+        }
+        console.log('name',this.refs.InformationSudoku.state.name)
     };
 
-    getCompanyListData = () => {
-        Fetch.fetchData('searchDataRe',{},(res)=>{
-            this.setState({data:res.data.companyMessage[0]});
+    //错误页面显示信息判断
+    handlerError=(code,Msg)=>{
+        if(code==="400"|| code==="404"||code==="444"||code==="445"|| code==="703")
+        {
+            msg="没有查到满足条件的信息";
+        }else if(code==="1314"|| code==="1315"||code==="1316"||code==="1319"||"0001")
+        {
+            msg=Msg;
+        }else {
+            msg="查询过程中出现异常";
+        }
+
+        this.setState({
+            ErrorMsg:msg,
         });
     }
+
+
 
 
 }
@@ -174,11 +272,6 @@ export default class CompanyPagePage extends Component {
 const styles = StyleSheet.create({
     container: {
         backgroundColor: '#F5FCFF',
-    },
-    welcome: {
-        fontSize: 20,
-        textAlign: 'center',
-        margin: 10,
     },
     sodoku:{
         marginTop:10,
@@ -222,8 +315,6 @@ const styles = StyleSheet.create({
     },
     seachResultList:{
         paddingTop:20,
-        paddingLeft:40,
-        paddingRight:40,
         paddingBottom:20,
         marginBottom:10,
         backgroundColor: 'white',
@@ -231,30 +322,27 @@ const styles = StyleSheet.create({
     seachResultListTitleRight:{
         borderWidth:1,
         borderColor:'#67c94d',
-        paddingRight:6,
-        paddingLeft:10,
+        paddingRight:4,
+        paddingLeft:8,
+        alignItems: 'center',
         paddingBottom:1,
         paddingTop:1,
+        marginRight:10,
         borderRadius:4,
     },
     seachResultListTitleRightText:{
         color:'#67c94d'
     },
     seachResultListTitle:{
+        paddingLeft:20,
         flexDirection:'row',
         alignItems: 'center',
         justifyContent: 'space-between',
     },
     seachResultListTitleText:{
+        flex:1,
         fontSize: 20,
         color:'#333333',
-    },
-    seachResultListCode:{
-        paddingTop:10,
-    },
-    seachResultListCodeText:{
-        fontSize: 16,
-        color:'#9e9e9e',
     },
     seachResultListMoneyText:{
         fontSize: 16,
@@ -267,22 +355,24 @@ const styles = StyleSheet.create({
     seachResultListMessage:{
         paddingTop:10,
         flexDirection:'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
     },
     seachResultListMessageLeftInner:{
-        paddingRight:10,
+        flex:1,
         alignItems: 'center',
-        // backgroundColor: 'red',
     },
     seachResultListNameText:{
         fontSize: 16,
         color:'#1abef9',
     },
+    seachListRule:{
+        fontSize: 14,
+    },
     seachResultListMessageInnerBottom:{
+        flex:1,
         flexDirection:'row',
         alignItems: 'center',
-        // backgroundColor: 'blue',
+        justifyContent: 'space-between',
     },
     seachResultListMessageCenterText:{
         paddingLeft:10,
@@ -290,7 +380,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     seachResultListMessageRightInner:{
-        paddingLeft:10,
+        flex:1,
         alignItems: 'center',
     },
     seachResultListSpaceText:{
