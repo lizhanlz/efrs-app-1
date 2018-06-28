@@ -4,10 +4,11 @@ import {
     Text,
     View,
     FlatList,
-    SectionList,
+    TouchableOpacity,
+    Image
 } from 'react-native';
 
-import DetailSectionHeader from './DetailSectionHeader'
+import CommonExpandableList from './CommonExpandableList'
 
 export default class CommonDetailPage extends Component {
 
@@ -29,7 +30,7 @@ export default class CommonDetailPage extends Component {
         super(props);
         this.state = {
             // sectionList 数据
-            cellDataArray: []
+            cellDataArray: [],
         }
 
 
@@ -39,35 +40,50 @@ export default class CommonDetailPage extends Component {
         //json数据循环生成列表
         if (this.props.navigation.state.params.type !== '0') {
             let data = this.props.navigation.state.params.info.value;
+            console.log('data',data)
+            let m = 0;
             let SectionDataArr = []
             for(let i in data){
-
+                console.log('1',data[i])
                 let DataArr = [];
                 let EmptyArr = [];
-                for(let n in data[i]){
+                for (let j = 0; j < data[i].length; j++) {
 
-                    DataArr.push(
-                        {
-                            name: n,
-                            value: data[i][n],
-                        }
-                    );
-                };
+                    let DataListArr = [];
+                    for(let n in data[i][j]){
+                        DataListArr.push(
+                            {
+                                name: n,
+                                value: data[i][j][n],
+                            }
+                        );
+                    };
+
+                    DataArr.push(DataListArr.map((item)=>{
+                        let k = Math.random()
+
+                        return (
+                            <View  key={k} style = { styles.innerViewStyle }>
+                                <Text  style={styles.key}>{item.name}：
+                                    <Text style={styles.value}>{item.value}
+                                    </Text>
+                                </Text>
+                            </View>
+                    )}))
+                }
+
 
                 SectionDataArr.push(
                     {
-                        key: i,
-                        data: DataArr,
-                        show: true,
+                        groupHeaderData: i,
+                        groupListData: DataArr,
                     }
                 );
+                console.log('SectionDataArr',SectionDataArr)
                 DataArr = EmptyArr
             }
-            this.trueCellDataArray = SectionDataArr;
-            let newArray = JSON.parse(JSON.stringify(SectionDataArr))
-            console.log(newArray)
             this.setState({
-                cellDataArray: newArray,
+                cellDataArray: SectionDataArr,
             });
 
 
@@ -112,29 +128,23 @@ export default class CommonDetailPage extends Component {
 
             )
         } else {
-
-
             return(
-                <View>
-                    <View style = {styles.headdown}/>
-                    <SectionList
-                        sections={this.state.cellDataArray}  //需要渲染的数据
-                        renderSectionHeader={this._renderSectionHeader} // section的头部组件
-                        renderItem={this._renderSectionItem}  // section的元素组件
-                        keyExtractor = {this._extraUniqueKey}  //给每个item生成一个key
-                        SectionSeparatorComponent = {this._SectionSeparatorComponent} // section之间的间隔函数
-                        ItemSeparatorComponent = {this._ItemSeparatorComponent} // item之间的间隔函数
-                        ListFooterComponent={this._footer}//尾部
-                    />
-                </View>
+                <CommonExpandableList
+                    data={this.state.cellDataArray}
+                    style={{}}
+                    groupStyle={{}}
+                    groupSpacing={10}
+                    implementedBy={'FlatList'}
+                    renderGroupHeader={this._renderGroupHeader}
+                    renderGroupListItem={this._renderGroupListItem}
+                />
             )
 
         }
     };
-    componentDidMount() {
 
-    };
     _renderItem = (Item) => {
+        console.log('item',Item)
         return (
             <View style = { styles.innerViewStyle }>
                 <Text  style={styles.key}>{Item.item.name}：
@@ -147,97 +157,40 @@ export default class CommonDetailPage extends Component {
     };
 
 
+    _renderGroupListItem = ({item, groupId, rowId}) => {
 
-    _renderSectionItem = (info) => {
-        const Item = info.item;
-        // 如果
-        if (Item.value === undefined) {
-            return(
-                <View>
-                </View>
-            )
-        } else {
-            return (
-                <View style = { styles.sectionInnerViewStyle }>
-                    <Text  style={styles.sectionKey}>{Item.name}：
-                        <Text style={styles.sectionValue}>   {Item.value}
-                        </Text>
-                    </Text>
-                </View>
-            )
-        }
-
-    };
-
-    handlerSectionHeader = (info) => {
-
-        if (info.section.show) {
-            this.state.cellDataArray.map((item, index) => {
-                if (item === info.section) {
-                    item.show = !item.show;
-                    item.data = [{ key:'close' }];
-                }
-            });
-        } else {
-            this.trueCellDataArray.map((item, index) => {
-                if (item.key === info.section.key) {
-                    let data = item.data;
-
-                    this.state.cellDataArray.map((cellItem, i) => {
-                        if (cellItem === info.section) {
-                            cellItem.show = !cellItem.show;
-                            cellItem.data = data;
-                        }
-                    })
-                }
-            })
-        }
-        let newDatas = JSON.parse(JSON.stringify(this.state.cellDataArray));
-        this.setState({
-            cellDataArray: newDatas
-        })
-    };
-    _ItemSeparatorComponent = () => {
         return (
-            <View style = {styles.itemSeparator}>
+            <View>
+                <View>{item}</View>
+                <View style={{height:3}}>
+                </View>
             </View>
         )
+
+
     };
 
-    _SectionSeparatorComponent = (info) => {
-        let time = new Date().getTime()
-        console.log(time)
-        console.log('separator', info)
-        if (info.trailingItem === undefined) {
-            return (
-                <View style = {styles.sectionSeparator}>
-                    {/*<Text style = { styles.txt }>粗{time}</Text>*/}
+
+
+    _renderGroupHeader = ({item, groupId, status, toggleStatus}) => {
+        console.log('title', item)
+        return  (
+                <View style={styles.GroupHeaderContainer}>
+                    <TouchableOpacity
+                        onPress={() => toggleStatus(false)}
+                        style={styles.GroupHeaderSubView}
+                    >
+                        <Text style={styles.GroupHeaderTxt}>
+                            {item}
+                        </Text>
+                        <Image
+                            style={styles.GroupHeaderImage}
+                            source={status ? require('../Res/Images/top_arrow.png') : require('../Res/Images/bottom_arrow.png')}
+                        >
+                        </Image>
+                    </TouchableOpacity>
                 </View>
-            )
-
-        } else {
-            if (info.leadingItem === undefined) {
-                return (
-                    <View style={styles.sectionItemSeparator}>
-                        {/*<Text style={styles.txt}>细{time}</Text>*/}
-                    </View>
-                )
-            } else {
-                return (
-                    <View style={styles.sectionOtherItemSeparator}>
-                        {/*<Text style={styles.txt}>中粗{time}</Text>*/}
-                    </View>
-                )
-            }
-        }
-    };
-
-    _renderSectionHeader = (info) => {
-        //const txt = info.section.key;
-        return  <DetailSectionHeader
-                    info = { info }
-                    handlerSectionHeader = {this.handlerSectionHeader.bind(this)}
-                />
+        )
     };
 
 
@@ -310,38 +263,24 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         color: '#333333',
     },
-    sectionInnerViewStyle: {
-        backgroundColor: 'white',
-        paddingTop:12,
-        paddingBottom:12,
-        borderLeftWidth: 15,
-        borderRightWidth: 15,
-        borderColor: '#FFFFFF',
-    },
-    SectionHeader: {
+    GroupHeaderContainer: {
         height: 50,
         backgroundColor: '#FFFFFF',
+        justifyContent: 'center',
+    },
+    GroupHeaderSubView: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+    },
+    GroupHeaderImage: {
+        width: 16,
+        height: 16,
+        marginLeft: 25,
+    },
+    GroupHeaderTxt: {
         fontSize: 18,
         color: '#333333',
-
-    },
-    sectionValue: {
-        fontSize: 13,
-        color:'#9e9e9e',
-        marginLeft: 20,
-    },
-    sectionKey: {
-        fontSize: 15,
-        marginLeft: 20,
-        color: '#333333',
-    },
-    sectionSeparator: {
-        height: 15,
-    },
-    sectionItemSeparator: {
-        height: 2,
-    },
-    sectionOtherItemSeparator: {
-        height: 13,
-    },
+    }
 });

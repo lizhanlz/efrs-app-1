@@ -3,7 +3,7 @@
 import React, { Component } from 'react';
 import { StyleSheet, FlatList, View, Text, Image, TouchableOpacity } from 'react-native';
 
-
+import CornerLabel from './CornerLabel'
 
 
 // 获取屏幕宽度
@@ -12,7 +12,7 @@ const { width } = Dimensions.get('window');
 
 // 常量设置
 const cols = 4;  // 列数
-const cellWidth = width / 4;  // 元素宽度
+const cellWidth = (width) / 4;  // 元素宽度
 
 
 export default class CommonSudoku extends Component {
@@ -97,33 +97,17 @@ export default class CommonSudoku extends Component {
                                 { name }
                             </Text>
                         </View>
+                        {/*<CornerLabel*/}
+                            {/*cornerRadius={54}*/}
+                            {/*alignment={'right'}*/}
+                            {/*style={{backgroundColor:'red', height: 24,}}*/}
+                            {/*textStyle={{color: '#fff', fontSize: 12,}}*/}
+                            {/*>*/}
+                            {/*未开放*/}
+                        {/*</CornerLabel>*/}
                     </TouchableOpacity>
                 )
-            } else if (hasdata === 2){
-                // 图标点击指向详情页面
-                return (
-                    <TouchableOpacity onPress={()=> {
-                        this.setState({
-                            name: name
-                        }, function () {
-                            this.props.onPressFnDetail()
-                        })
-                    }}>
-                        <View style = {{
-                            height: this.props.height,
-                            width: cellWidth,
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                        }}>
-                            <Image source={image} style = { styles.image } resizeMode = {'contain'}/>
-                            <Text style = { styles.txt }>
-                                { name }
-                            </Text>
-                        </View>
-                    </TouchableOpacity>
-
-                )
-            } else {
+            }else {
                 // 图标不可点，没有数据
                 return (
                     <View style = {{
@@ -149,18 +133,18 @@ export default class CommonSudoku extends Component {
         return "index" + index + item
     }
 
-    _header() {
+    _header = () => {
         // 判断是否有头部
-        if (thiz.props.headerName){
+        if (this.props.headerName === null){
+            return  null
+        } else {
             return  <View>
                         <View style = { styles.header }>
-                            <Text style = { styles.headerTxt }>{thiz.props.headerName}</Text>
+                            <Text style = { styles.headerTxt }>{this.props.headerName}</Text>
                         </View>
                         <View style = { styles.headerLine }>
                         </View>
                     </View>
-        } else {
-            return null
         }
     }
 
@@ -182,7 +166,9 @@ const styles = StyleSheet.create({
         backgroundColor: '#ffffff',
 
     },
-    wraaper: {
+    wrapper: {
+        // marginLeft:10,
+        // marginRight:10,
     },
     image: {
         width: 30,

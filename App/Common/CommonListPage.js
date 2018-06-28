@@ -366,13 +366,14 @@ export default class CommonListPage extends Component{
                 );
             }
         }
-        if(this.props.navigation.state.params.info==="照面信息")
-        {
-                DataArr.push(FirstData);
-            
-        }
         else {
-            DataArr = this.props.navigation.state.params.data;
+            if(this.props.navigation.state.params.info==="照面信息")
+            {
+                DataArr.push(FirstData);
+
+            }
+            else{ DataArr = this.props.navigation.state.params.data;}
+
         }
 
 
