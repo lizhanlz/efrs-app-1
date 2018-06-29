@@ -14,6 +14,7 @@ const detailPage = 'Detail';//点击跳转的下一个页面
 let totalPage;
 let pageNo = 1;//当前第几页
 let page="1";
+let totalpage;
 var Dimensions = require('Dimensions');
 var {width,height} = Dimensions.get('window');
 export default class CommonListPage extends Component{
@@ -25,7 +26,7 @@ export default class CommonListPage extends Component{
         this.state = {
             data:[],//存储列表数据
             Code:"",
-            errorMsg:"",
+            Errormsg:"",
             showFoot:2,
             listtype:"1",
             datalength:0,
@@ -41,6 +42,8 @@ export default class CommonListPage extends Component{
                 textAlign: 'center',
                 alignSelf: 'center',
                 flex:1,
+                color:'#333333',
+
             },
             headerRight: (<View></View>)
         }
@@ -85,7 +88,7 @@ export default class CommonListPage extends Component{
     getView({item}){
         //返回每个item
         let arr=[];
-
+        let title=[];
 
         //判断列表显示样式，年报类还是普通类。0为普通类，1为年报类，该列表页只展示年份;2为动产抵押。
 
@@ -96,6 +99,21 @@ export default class CommonListPage extends Component{
                 </Text>
             );
             console.log(arr);
+            return(
+                <TouchableOpacity activeOpacity={0.5}
+                                  onPress={() => thiz.props.navigation.navigate(detailPage,{info:item,type:thiz.state.data.listtype?thiz.state.data.listtype:thiz.state.listtype})}>
+                    <View style={styles.container}>
+                        <View style={styles.list}>
+
+                            <View style={styles.item}>{arr}</View>
+                        </View>
+                        <Image source={require('../Res/Images/arrow.png')} style={styles.arrow}
+                        />
+                    </View>
+
+
+                </TouchableOpacity>
+            );
         }
         else if(thiz.state.listtype ==="2"){
             let listvalue =Object.values(item.value);
@@ -118,31 +136,45 @@ export default class CommonListPage extends Component{
         }
         else
         {
+            //加标题
+            for(let i=1;i<4;i++){
+                arr.push(
+                    <Text key={i} style={styles.key}>{Object.keys(item)[i]}:
+                        <Text  style={styles.value} numberOfLines={2}>  {Object.values(item)[i]}
+                        </Text>
+                    </Text>
+                );
+            }
+            title.push(
+                Object.values(item)[0]
+            )
             //json数据前4个字段，循环生成列表
 
-            for(let i=0;i<4;i++){
+         /*   for(let i=0;i<4;i++){
                 arr.push(
                     <Text key={i} style={styles.key}>{Object.keys(item)[i]}:
                         <Text  style={styles.value}>  {Object.values(item)[i]}
                         </Text>
                     </Text>
                 );
-            }
+            }*/
+            return(
+                <TouchableOpacity activeOpacity={0.5}
+                                  onPress={() => thiz.props.navigation.navigate(detailPage,{info:item,type:thiz.state.data.listtype?thiz.state.data.listtype:thiz.state.listtype})}>
+                    <View style={styles.container}>
+                        <View style={styles.list}>
+                            <Text style={styles.title} numberOfLines={1}>{title}</Text>
+                            <View style={styles.item}>{arr}</View>
+                        </View>
+                        <Image source={require('../Res/Images/arrow.png')} style={styles.arrow}
+                        />
+                    </View>
+
+
+                </TouchableOpacity>
+            );
         }
-        return(
-            <TouchableOpacity activeOpacity={1}
-                              onPress={() => thiz.props.navigation.navigate(detailPage,{info:item,type:thiz.state.data.listtype?thiz.state.data.listtype:thiz.state.listtype})}>
 
-                <View style={styles.container}>
-                    <View style={styles.item}>{arr}</View>
-
-                    <Image source={require('../Res/Images/arrow.png')} style={styles.arrow}
-                    />
-
-
-                </View>
-            </TouchableOpacity>
-        );
     };
 
 
@@ -188,16 +220,17 @@ export default class CommonListPage extends Component{
             return;
         }
         //如果当前页大于或者等于总页数，那就是最后一页了，返回
-        if((pageNo!=1)&&(pageNo>=totalPage)){
+        if((pageNo>=totalpage)){
             this.setState({showFoot:1});
         }else{
             pageNo++;
+            //底部显示正在加载更多数据
+            this.setState({showFoot:0});
+            //获取分页数据
+            this.requestPageData();
         }
 
-        //底部显示正在加载更多数据
-        this.setState({showFoot:0});
-        //获取分页数据
-        this.requestPageData();
+
     };
     //下拉刷新方法
     onRefresh =() =>{
@@ -219,25 +252,27 @@ export default class CommonListPage extends Component{
             "key":this.props.navigation.state.params.key,
             "page":page,
             "size":"10"},function(res) {
-            let msg="";
-            let code=res.code;
-            let totalpage=Number(totalPage);
+
+            totalpage=Number(res.totalpage);
             console.log(totalpage);
             //判断请求是否成功
-            if(code!="200" && code!="0000")
+            let respCode=res.respCode;
+
+            if(respCode==="failed")
             {
-                thiz.handlerError(code);
+
                 thiz.setState({
-                    showFoot:2,
+                    Errormsg:res.Errormsg,
+                    refreshing:false,
+                    showfoot:2,
+
                 });
             }
 
             else{
                 let foot = 0;
 
-                if(pageNo>=totalPage){
-                    foot =1;//底部显示没有更多数据
-                }
+
 
                 //上拉加载的新数据push进原数据数组
                 const getNewData =(res)=> {
@@ -295,13 +330,13 @@ export default class CommonListPage extends Component{
             "page":page,
             "size":"10"},function(res) {
 
-            let msg="";
-            let code=res.code;
-            let Msg=res.msg;
-            if(code!="200" && code!="0000")
+            let respCode=res.respCode;
+
+            if(respCode==="failed")
             {
-                thiz.handlerError(code,Msg);
+
                 thiz.setState({
+                    Errormsg:res.Errormsg,
                     refreshing:false,
 
                 });
@@ -349,10 +384,16 @@ export default class CommonListPage extends Component{
         //第一次请求后端数据
         //this.requestRefreshData();
         totalPage=this.props.navigation.state.params.totalpage,
+        totalpage=Number(totalPage)
             //获取上级页面传来的参数
+        let foot;
         console.log(this.props.navigation.state.params.data);
+        if((pageNo>=totalpage)){
+            foot = 1;
+        }else{
+            foot = 0;
+        }
 
-        let foot = 0;
         let FirstData = this.props.navigation.state.params.data;
         let DataArr = [];
         if(this.props.navigation.state.params.listtype ==="1" || this.props.navigation.state.params.listtype ==="2") {
@@ -400,7 +441,7 @@ export default class CommonListPage extends Component{
     }
 
     //错误页面显示信息判断
-    handlerError=(code,Msg)=>{
+/*    handlerError=(code,Msg)=>{
         if(code==="400"|| code==="404"||code==="444"||code==="445"|| code==="703")
         {
             msg="没有查到满足条件的信息";
@@ -419,7 +460,7 @@ export default class CommonListPage extends Component{
             errorMsg:msg,
             Code:code,
         });
-    }
+    }*/
 }
 
 const styles =StyleSheet.create({
@@ -428,9 +469,20 @@ const styles =StyleSheet.create({
         flex: 1,
         flexDirection: 'row',
         backgroundColor: 'white',
-        marginTop: 15,
+        marginTop: 5,
         alignItems:'center',
-        justifyContent:'center',
+
+    },
+    list:{
+        width:width-88,
+
+    },
+    title:{
+        fontSize: 16,
+        marginTop: 10,
+        color:'#333333',
+        marginLeft: 25,
+
     },
     item: {
         flex:1,
@@ -438,11 +490,11 @@ const styles =StyleSheet.create({
         flexDirection: 'column',
         justifyContent:'center',
         marginLeft: 25,
-        marginBottom:10,
+        marginBottom:5,
     },
     key: {
-        fontSize: 15,
-        marginTop: 10,
+        fontSize: 13,
+        marginTop: 5,
         color:'#333333',
     },
     _key: {
@@ -453,10 +505,17 @@ const styles =StyleSheet.create({
     value: {
         fontSize: 13,
         color:'#9e9e9e',
-        lineHeight:24,
+        lineHeight:18,
     },
 
     arrow: {
+        width:13,
+        height:22,
+
+        marginLeft:50,
+
+    },
+    arrow2: {
         width:13,
         height:22,
         marginRight:30,

@@ -141,12 +141,12 @@ const styles = StyleSheet.create({
         borderRadius:5,
         borderColor: '#dfdfdf',
         backgroundColor: 'white',
-        height:56
+        height:50
     },
     textButtonView: {
         backgroundColor: 'white',
-        height:56,
-        marginTop:20,
+        height:50,
+        marginTop:10,
     },
     backTextWrapper: {
         backgroundColor: 'white',
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
         paddingLeft:12,
     },
     backText: {
-        fontSize:12,
+        fontSize:13,
         color:'#E63C27',
         //borderRadius:5,
         // backgroundColor: 'blue',
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     button: {
         width:'100%',
         borderRadius:5,
-        height:56,
+        height:50,
         backgroundColor:'#E63C27',
         alignItems: 'center',
         justifyContent: 'center',
@@ -171,5 +171,9 @@ const styles = StyleSheet.create({
     buttonText: {
         color:'#ffffff',
         fontSize:16,
+    },
+    userImg: {
+        width:86,
+        height:82,
     },
 });

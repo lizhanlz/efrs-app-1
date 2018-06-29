@@ -7,12 +7,13 @@ import {
     StyleSheet,
     ScrollView,
     View,
-    TextInput,
+    Text,
     Image,
     AsyncStorage,
     TouchableOpacity,
     TouchableHighlight,
     ImageBackground,
+    Modal
 } from 'react-native';
 import { Slider } from 'IFTide';
 import CommonSudoku from '../../../Common/CommonSudoku';
@@ -26,22 +27,30 @@ export default class HomePage extends Component {
         this.state = {
             data:[],//存储列表数据
             type:[], //存储九宫格跳转类型
+            splash:true,
         };
     }
     componentWillMount() {
+
+    }
+    componentDidMount () {
         //获取data数据
         this.setState({
             data:HomeSudokuData[0],
             type:HomeSudokuData[1],
         })
-    }
-    componentDidMount () {
         AsyncStorage.setItem('token','');
-        // console.log('kong');
+        this.timer = setTimeout(() => {
+            this.setState({
+                splash:false,
+            })
+        },2000)
 
+    }
+    componentWillUnmount(){
+        this.timer && clearTimeout(this.timer)
     }
     render() {
-
 
         let sliderdata = [
             { img: require('../../../Res/Images/轮播图1.png'), id: 1 },
@@ -50,56 +59,62 @@ export default class HomePage extends Component {
             { img: require('../../../Res/Images/轮播图4.png'), id: 4 },
         ];
         return (
-            <ScrollView>
-                <View style={styles.body}>
-                    <ImageBackground source={require('../../../Res/Images/bgpic.png')} style={styles.bgpic} resizeMode="contain">
-                        <View style={styles.header}>
+                <ScrollView>
+                    <Modal visible={this.state.splash}
+                                    onRequestClose = {() => {}}
+                                    animationType = 'fade'
+                                    transparent = {true}>
+                    <Image source={require('../../../Res/Images/启动.png')} style={styles.splash}/>
+                </Modal>
 
-                            <Image source={require('../../../Res/Images/logo.png')} style={styles.logo}/>
-                            <Image source={require('../../../Res/Images/line.png')} style={styles.line}/>
-                            <Image source={require('../../../Res/Images/title.png')} style={styles.title}/>
-                        </View>
-                        <TouchableOpacity activeOpacity={1} onPress={() => this.props.navigation.navigate('Search',{info:''})}>
-                            <View style={styles.searchBox}>
-                                <Image source={require('../../../Res/Images/search.png')} style={styles.searchIcon}/>
-                                <TextInput underlineColorAndroid="transparent" placeholder="请输入企业名称"
-                                           placeholderTextColor="#dfdfdf"
-                                           editable={false} style={styles.textInput}/>
-                                <Image source={require('../../../Res/Images/mic.png')} style={styles.voiceIcon}/>
+                    <View style={styles.body}>
+                        <ImageBackground source={require('../../../Res/Images/bgpic.png')} style={styles.bgpic} resizeMode="contain">
+                            <View style={styles.header}>
+
+                                <Image source={require('../../../Res/Images/logo.png')} style={styles.logo}/>
+                                <Image source={require('../../../Res/Images/line.png')} style={styles.line}/>
+                                <Image source={require('../../../Res/Images/title.png')} style={styles.title}/>
                             </View>
-                        </TouchableOpacity>
-                    </ImageBackground>
+                            <TouchableOpacity activeOpacity={1} onPress={() => this.props.navigation.navigate('Search',{info:''})}>
+                                <View style={styles.searchBox}>
+                                    <Image source={require('../../../Res/Images/search.png')} style={styles.searchIcon}/>
+                                    <Text style={styles.textInput}>请输入企业名称</Text>
 
-                    <View style={styles.carousel}>
-                        <Slider
-                            data={sliderdata}
-                            duration={3000}
-                            loop={true}
-                            autoPlay={true}
-                            style={styles.slider}
-                            pagination={true}
-                            itemHeight={246*width/750}
-                            clickFunc={this.itemClick}
-                            activeOpacity={1}
-                        />
+                                    <Image source={require('../../../Res/Images/mic.png')} style={styles.voiceIcon}/>
+                                </View>
+                            </TouchableOpacity>
+                        </ImageBackground>
+
+                        <View style={styles.carousel}>
+                            <Slider
+                                data={sliderdata}
+                                duration={3000}
+                                loop={true}
+                                autoPlay={true}
+                                style={styles.slider}
+                                pagination={true}
+                                itemHeight={246*width/750}
+                                activeOpacity={1}
+                            />
+                        </View>
+                        <View style={styles.sodoku}>
+                            <CommonSudoku
+                                ref={'Sudoku'}
+                                data={this.state.data}
+                                type={this.state.type}
+                                onPressFn={this._onPressFn.bind(this)}
+                                onPressFnMore={this._onPressFnMore.bind(this)}
+                                headerName={null}
+                                height={(height-110*width/750-399*width/750-21-246*width/750-20)/3}
+                            />
+                        </View>
                     </View>
-                    <View style={styles.sodoku}>
-                        <CommonSudoku
-                            ref={'Sudoku'}
-                            data={this.state.data}
-                            type={this.state.type}
-                            onPressFn={this._onPressFn.bind(this)}
-                            onPressFnMore={this._onPressFnMore.bind(this)}
-                        />
-                    </View>
-                </View>
-            </ScrollView>
+                </ScrollView>
         );
     }
     //跳转到搜索页
     _onPressFn () {
-        this.props.navigation.navigate('Search',{info: this.refs.Sudoku.state.name})
-        //console.log(this.refs.Sudoku.state.name)
+        this.props.navigation.navigate('Search',{info:this.refs.Sudoku.state.name})
     };
     itemClick (){
 
@@ -126,7 +141,6 @@ const styles = StyleSheet.create({
         flexDirection:"row",
         justifyContent:'center',
         alignItems:'center',
-        marginTop:70,
 
     },
     logo:{
@@ -148,7 +162,6 @@ const styles = StyleSheet.create({
         width:625*width/750,
         height:85*width/750,
         padding:0,
-        marginBottom:20,
         marginTop:20,
         backgroundColor:'white',
         flexDirection:'row',
@@ -166,7 +179,9 @@ const styles = StyleSheet.create({
         flex:1,
         backgroundColor:'transparent',
         fontSize:13,
-
+        marginLeft:20,
+        color:'#333333',
+        opacity:0.4,
     },
     voiceIcon:{
         height:20,
@@ -177,19 +192,23 @@ const styles = StyleSheet.create({
     },
     carousel:{
 
-        marginTop:10,
+        marginTop:5,
 
     },
     sodoku:{
-        marginTop:10,
+        marginTop:5,
         backgroundColor:'white',
         width:width,
-        height:515*width/750,
+        // height:650*width/750,
         borderBottomWidth:1,
         borderBottomColor:'#dfdfdf',
     },
     slider:{
         backgroundColor:'white',
 
+    },
+    splash:{
+        height:height,
+        width:width,
     }
 });

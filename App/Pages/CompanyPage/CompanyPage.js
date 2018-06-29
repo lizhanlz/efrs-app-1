@@ -19,7 +19,7 @@ import Fetch from "../../Fetch/DataFactories";
 import { RiskSudokuData } from "../../Res/Data/RiskSudoku";
 import { InformationSudokuData } from "../../Res/Data/InformationSudoku";
 
-let pageNo = "0";
+let pageNo = "1";
 
 
 export default class CompanyPagePage extends Component {
@@ -31,6 +31,7 @@ export default class CompanyPagePage extends Component {
                 textAlign: 'center',
                 alignSelf: 'center',
                 flex:1,
+                color:'#333333',
             },
             headerRight: (<View></View>)
         }
@@ -141,21 +142,21 @@ export default class CompanyPagePage extends Component {
 
                         />
                     </View>
-                    <View style={styles.header}>
-                        <Text style={styles.txt}>族谱</Text>
-                        <View style={styles.Line}>
-                        </View>
-                    </View>
-                    <View style={styles.header}>
-                        <Text style={styles.txt}>报告</Text>
-                        <View style={styles.Line}>
-                        </View>
-                    </View>
-                    <View style={styles.header}>
-                        <Text style={styles.txt}>国际</Text>
-                        <View style={styles.Line}>
-                        </View>
-                    </View>
+                    {/*<View style={styles.header}>*/}
+                        {/*<Text style={styles.txt}>族谱</Text>*/}
+                        {/*<View style={styles.Line}>*/}
+                        {/*</View>*/}
+                    {/*</View>*/}
+                    {/*<View style={styles.header}>*/}
+                        {/*<Text style={styles.txt}>报告</Text>*/}
+                        {/*<View style={styles.Line}>*/}
+                        {/*</View>*/}
+                    {/*</View>*/}
+                    {/*<View style={styles.header}>*/}
+                        {/*<Text style={styles.txt}>国际</Text>*/}
+                        {/*<View style={styles.Line}>*/}
+                        {/*</View>*/}
+                    {/*</View>*/}
 
                 </ScrollView>
             </View>
@@ -173,12 +174,12 @@ export default class CompanyPagePage extends Component {
             "key":companyName,
             "page":pageNo,
             "size":"10"}, function(res) {
-            let code = res.code;
-            let Msg = res.msg;
+            let code = res.respCode;
+            let Msg = res.Errmsg;
             let Data = res.data;
             let ListType = res.listtype;
             let totalpage = res.totalpage;
-            if(code !== "200" && code !== "0000")
+            if(code !== "success")
             {
                 thiz.handlerError(code,Msg);
                 thiz.alertType1._show()
@@ -196,7 +197,7 @@ export default class CompanyPagePage extends Component {
         let companyID = this.props.navigation.state.params.company.ID;
         let pressInformationName = this.refs.InformationSudoku.state.name;
         //具体请求的参数在文档里面写出，根据模块不同，配置的参数也不同。
-        if (pressInformationName === '股东信息' || pressInformationName === '法人对外投资' || pressInformationName === '对外任职') {
+        if (pressInformationName === '股东信息' || pressInformationName === '法人对外投资' || pressInformationName === '企业对外投资') {
             console.log('1')
             Fetch.fetchData('jsonpost', {"serviceKey":pressInformationName,
                 "bankId":"8B94459B9F1D4ECD",
@@ -204,12 +205,12 @@ export default class CompanyPagePage extends Component {
                 "key":companyID,
                 "page":pageNo,
                 "size":"10"}, function(res) {
-                let code = res.code;
-                let Msg = res.msg;
+                let code = res.respCode;
+                let Msg = res.Errmsg;
                 let Data = res.data;
                 let ListType = res.listtype;
                 let totalpage = res.totalpage;
-                if(code !== "200" && code !== "0000")
+                if(code !== "success")
                 {
                     thiz.handlerError(code,Msg);
                     thiz.alertType1._show()
@@ -227,12 +228,12 @@ export default class CompanyPagePage extends Component {
                 "key":companyName,
                 "page":pageNo,
                 "size":"10"}, function(res) {
-                let code = res.code;
-                let Msg = res.msg;
+                let code = res.respCode;
+                let Msg = res.Errmsg;
                 let Data = res.data;
                 let ListType = res.listtype;
                 let totalpage = res.totalpage;
-                if(code !== "200" && code !== "0000")
+                if(code !== "success")
                 {
                     thiz.handlerError(code,Msg);
                     thiz.alertType1._show()
@@ -248,15 +249,7 @@ export default class CompanyPagePage extends Component {
 
     //错误页面显示信息判断
     handlerError=(code,Msg)=>{
-        if(code==="400"|| code==="404"||code==="444"||code==="445"|| code==="703")
-        {
-            msg="没有查到满足条件的信息";
-        }else if(code==="1314"|| code==="1315"||code==="1316"||code==="1319"||"0001")
-        {
             msg=Msg;
-        }else {
-            msg="查询过程中出现异常";
-        }
 
         this.setState({
             ErrorMsg:msg,
@@ -271,11 +264,11 @@ export default class CompanyPagePage extends Component {
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: '#F5FCFF',
+
     },
     sodoku:{
-        marginTop:10,
-        marginBottom:1,
+        marginTop:8,
+
         backgroundColor:'white',
     },
     seachResult:{
@@ -316,7 +309,7 @@ const styles = StyleSheet.create({
     seachResultList:{
         paddingTop:20,
         paddingBottom:20,
-        marginBottom:10,
+        marginBottom:0,
         backgroundColor: 'white',
     },
     seachResultListTitleRight:{
@@ -331,7 +324,8 @@ const styles = StyleSheet.create({
         borderRadius:4,
     },
     seachResultListTitleRightText:{
-        color:'#67c94d'
+        color:'#67c94d',
+        fontSize:10,
     },
     seachResultListTitle:{
         paddingLeft:20,
@@ -341,15 +335,15 @@ const styles = StyleSheet.create({
     },
     seachResultListTitleText:{
         flex:1,
-        fontSize: 20,
+        fontSize: 16,
         color:'#333333',
     },
     seachResultListMoneyText:{
-        fontSize: 16,
+        fontSize: 13,
         color:'#333333',
     },
     seachResultListTimeText:{
-        fontSize: 16,
+        fontSize: 13,
         color:'#333333',
     },
     seachResultListMessage:{
@@ -362,7 +356,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     seachResultListNameText:{
-        fontSize: 16,
+        fontSize: 13,
         color:'#1abef9',
     },
     seachListRule:{
@@ -388,8 +382,8 @@ const styles = StyleSheet.create({
         color:'#dfdfdf'
     },
     header:{
-        marginTop:10,
-        marginBottom:10,
+        marginTop:8,
+
 
     },
     txt:{

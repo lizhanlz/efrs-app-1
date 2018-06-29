@@ -20,6 +20,8 @@ export default class CommonDetailPage extends Component {
                 textAlign: 'center',
                 alignSelf: 'center',
                 flex:1,
+                color:'#333333',
+
             },
             headerRight: (<View></View>)
         }
@@ -112,6 +114,10 @@ export default class CommonDetailPage extends Component {
             return(
                 <View>
                     <View style = {styles.headdown}/>
+                    <View style = {{
+                        height: 5,
+                        backgroundColor:'white',
+                    }}/>
                     <FlatList
                         ref = {(flatList) => this._flatList = flatList}
                         initialNumToRender={10}
@@ -225,7 +231,7 @@ export default class CommonDetailPage extends Component {
 }
 const styles = StyleSheet.create({
     headdown: {
-        height: 15,
+        height: 5,
 
     },
     wraaper: {
@@ -247,21 +253,24 @@ const styles = StyleSheet.create({
         borderLeftWidth: 15,
         borderRightWidth: 15,
         borderColor: '#FFFFFF',
+
     },
 
     value: {
         fontSize: 13,
-        marginTop: 10,
-        marginBottom: 10,
+        marginTop: 5,
+        marginBottom: 5,
         color:'#9e9e9e',
         marginLeft: 10,
+        lineHeight:18,
     },
     key: {
-        fontSize: 15,
+        fontSize: 13,
         marginLeft: 10,
-        marginTop: 10,
-        marginBottom: 10,
+        marginTop: 5,
+        marginBottom: 5,
         color: '#333333',
+        lineHeight:18,
     },
     GroupHeaderContainer: {
         height: 50,

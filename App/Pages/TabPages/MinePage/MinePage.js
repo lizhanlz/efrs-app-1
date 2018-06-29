@@ -8,25 +8,28 @@ import {
     Image,
     TouchableHighlight,
     TouchableOpacity,
+    StatusBar
 } from 'react-native';
-import { ListItem,Button } from 'IFTide';
+import { MessageBox } from 'IFTide';
 import Fetch from '../../../Fetch/DataFactories';
 import NavigationService from "../../../Utils/NavigationService";
 export default class MinePage extends Component {
     constructor (props) {
         super(props)
         this.state = {
-            userData: ''
+            userData:0,
+            bg:'#D44B35'
         }
     }
     componentDidMount () {
-      // Fetch.fetchData('usermessage',{},(res)=>{
-      //     this.setState({userData:res});
-      //     console.log(this.state.userData.data.jigou);
-      // })
+     // Fetch.fetchData('usermessage',{},(res)=>{
+      //    this.setState({userData:res});
+          //console.log(this.state.userData.data.jigou);
+     // })
     }
     userMessage (item){
-        this.props.navigation.navigate('Login');
+        this.showModal._show();
+       // this.props.navigation.navigate('Login');
        // NavigationService.navigator('Login',{userName:'dfbd'});
        // console.log(item);
         //alert(item)
@@ -35,13 +38,13 @@ export default class MinePage extends Component {
        // console.log(this.state.userData.jigou);
         return (
             <View style={styles.container}>
+                <StatusBar
+                // translucent={true}
+                backgroundColor={this.state.bg}
+                />
                 <View style={styles.header}>
                     <View style={styles.headerImg}>
-                        <Image style={styles.userImg} source={require('../../../Res/Images/userimg.png')}>
-                            {/*<View style={styles.userImgWrraper}>*/}
-
-                            {/*</View>style={{"width":60}}*/}
-                        </Image>
+                        <Image style={styles.userImg} source={require('../../../Res/Images/userimg.png')}/>
                     </View>
                     <View style={styles.headerMessage}>
                         <View style={styles.mainHeaderNameWapper}>
@@ -138,6 +141,18 @@ export default class MinePage extends Component {
                         </TouchableOpacity>
                     </View>
                 </View>
+                <MessageBox
+                    ref={(obj) =>{this.showModal = obj}}
+                    alertType = {2}
+                    title={'提示'}
+                    detailText={'确认要注销吗?'}
+                    onClose={() => {
+
+                    }}
+                    onConfirm={() => {
+                        this.props.navigation.navigate('Login');
+                    }}
+                />
             </View>
         )
     }
@@ -150,19 +165,22 @@ const styles = StyleSheet.create({
     },
     header: {
         flex:1,
+        width:'100%',
+       // height:160,
         flexDirection:'row',
         alignItems:'center',
-        backgroundColor: 'black',
+        backgroundColor: '#D44B35',
     },
     headerImg:{
         flex:1,
         alignItems:'center',
-        height:120,
-      //  backgroundColor: 'yellow',
+        justifyContent:'center',
+        height:'70%',
+       // backgroundColor: 'yellow',
     },
     headerMessage:{
         flex:2,
-        height:120,
+        height:'70%',
         // justifyContent:'center',
     },
     // headerPower:{
@@ -181,11 +199,13 @@ const styles = StyleSheet.create({
         backgroundColor: '#eef0f4',
     },
     userImg:{
-        width:120,
-        height:120,
+        width:'70%',
+       // width:100,
+       // height:100,
+        height:'88%',
         //borderColor:'white',
        // borderWidth:2,
-        borderRadius: 100,
+       // borderRadius: 50,
     },
     userImgWrraper:{
         width:120,
@@ -242,7 +262,7 @@ const styles = StyleSheet.create({
         height:46,
         flexDirection:'row',
         alignItems:'center',
-        borderBottomWidth:2,
+        borderBottomWidth:1,
         borderBottomColor:'#eef0f4',
         justifyContent:'space-between',
         backgroundColor: 'white',
@@ -260,11 +280,14 @@ const styles = StyleSheet.create({
     },
     userMessageButtonText:{
         color:'#333',
+        fontWeight:'600',
+        fontSize:16
     },
     userMessageButtonBox:{
         height:46,
         width:'96%',
         justifyContent:'center',
+        alignItems:'center',
         paddingLeft:8,
     }
     // mainHeaderButton:{

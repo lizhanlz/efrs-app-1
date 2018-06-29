@@ -9,7 +9,6 @@ import { createStackNavigator } from 'react-navigation';
 import NavigationService from '../Utils/NavigationService';
 import Tab from './Tab';
 import SearchPage from '../Pages/SearchPage/SearchPage';
-import SearchResult from '../Pages/SearchPage/SearchResult';
 import CompanyPage from '../Pages/CompanyPage/CompanyPage';
 import CommonListPage from '../Common/CommonListPage';
 import CommonDetailPage from '../Common/CommonDetailPage';
@@ -20,13 +19,7 @@ import SplashPage from '../Pages/SplashPage';
 // 定义一个 StackNavigator
 const RootStack = createStackNavigator(
     {
-        Splash: {
-            screen: SplashPage,
-            navigationOptions: {
-                header: null,
-            }
 
-        },
         Main: {
             screen: Tab,    // 默认启动页后会进入第一个路由视图中
             navigationOptions: {
@@ -43,12 +36,6 @@ const RootStack = createStackNavigator(
         List: CommonListPage,
         Detail: CommonDetailPage,
         AllSudoku: AllSudokuPage,
-        SearchList: {
-             screen: SearchResult,
-             navigationOptions: {
-             header: null,
-             }
-        },
         Login:{
             screen: LoginPage,
             navigationOptions: {
@@ -59,7 +46,7 @@ const RootStack = createStackNavigator(
         }
 
     }, {
-        initialRouteName: 'Splash',
+        initialRouteName: 'Main',
         mode: 'card',
     }
 );

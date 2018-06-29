@@ -21,7 +21,7 @@ import Soat from "../../Utils/JsonUtils";
 const selectMoneyData = ["不限","0-100万","100-200万","200-500万","500-1000万","1000万以上",];
 const selectTimeData = ["不限","1年内","1-5年","5-10年","10-15年","15年以上",];
 const soatData = ["按成立日期升序","按成立日期降序","按注册资本升序","按注册资本降序"];
-let totalPage =3;//数据总页数
+let search = false;//判断是否点击搜索
 let currentPage = 1;//当前第几页
 let params = {"serviceKey": "模糊查询","reqParams":{"page":currentPage,"areaCode":'',"industryPhy":'',"key":'',"size":'10',"esdateStart":'',"esdateEnd":'',"regcapGte":'',"regcapLte":'',"enableAggregate":"true"}};//当前第几页
 export default class SearchPage extends Component {
@@ -67,21 +67,22 @@ export default class SearchPage extends Component {
     //手动获取搜索结果
     getCompanyListData (){
         params.reqParams.page = 1;
+        currentPage = 1;
         params.reqParams.key = this.state.searchValue;
         this.setState({refreshing:true});
        // console.log(params);
        // console.log(Fetch.overTime);
         Fetch.fetchData('jsonpost',params,(res)=>{
-           // this.setState({listData:res.data.ENTERPRISES});
-            //console.log(res);
+           // console.log(res);
             if (res.success!==undefined&&res.success === false){
-                this.setState({msg:'连接超时,请重试！',refreshing:false});
+                this.setState({msg:'网络请求异常,请重试！',refreshing:false});
                 this.alertSearch._show();
             }
-            if (res.code === '200' || res.code === '404'){
+            if (res.respCode === 'success'){
                 this.setState({listData:res.data.ENTERPRISES,refreshing:false,totalnum:res.totalnum,data:res.data});
-            }else if(res.code === '-1'){
-                this.setState({refreshing:false});
+            }else if(res.respCode === 'failed'){
+                this.setState({msg:res.Errmsg,refreshing:false});
+                this.alertSearch._show();
             }
             if (res.totalpage>1){
                 this.setState({showFoot:0})
@@ -92,7 +93,6 @@ export default class SearchPage extends Component {
                 this.setState({soatDisable:false,view:false});
             }else{
                 this.setState({view:true,showFoot:2})
-               // view = '<Text style={{textAlign:"center"}}>没有查询到相关数据</Text>';
             }
         });
     }
@@ -103,7 +103,7 @@ export default class SearchPage extends Component {
             this.alertSearch._show();
             return
         }
-        currentPage = 1;
+        search = true;
         params.reqParams.areaCode = '';
         params.reqParams.industryPhy = '';
         params.reqParams.esdateStart = '';
@@ -272,7 +272,6 @@ export default class SearchPage extends Component {
     goSearchDetail (key){
         let info = this.props.navigation.state.params.info;
         if (info === ''){
-          //  console.log(key);
             this.props.navigation.navigate('Company',{company:key})
         }else {
             let companyName = key.ENTNAME;
@@ -292,11 +291,9 @@ export default class SearchPage extends Component {
                     let Data = res.data;
                     let ListType = res.listtype;
                     let totalpage = res.totalpage;
-                    if(code !== "200" && code !== "0000")
+                    if(res.respCode === 'failed')
                     {
-                        // thiz.handlerError(code,Msg);
-                        // thiz.alertType1._show()
-                        this.setState({msg:Msg});
+                        this.setState({msg:res.Errmsg});
                         this.alertSearch._show();
                     } else {
                         this.props.navigation.navigate('List', {info: pressInformationName, data: Data, listtype: ListType, totalpage: totalpage, key:companyID})
@@ -316,16 +313,13 @@ export default class SearchPage extends Component {
                     let Data = res.data;
                     let ListType = res.listtype;
                     let totalpage = res.totalpage;
-                    if(code !== "200" && code !== "0000")
+                    if(res.respCode === 'failed')
                     {
-                        // thiz.handlerError(code,Msg);
-                        // thiz.alertType1._show()
-                        this.setState({msg:Msg});
+                        this.setState({msg:res.Errmsg});
                         this.alertSearch._show();
                     } else {
                         this.props.navigation.navigate('List', {info: pressInformationName, data: Data, listtype: ListType, totalpage: totalpage, key:companyName})
                     }
-                    console.log('data', Data)
                 });
 
             }
@@ -502,16 +496,15 @@ export default class SearchPage extends Component {
                 this.setState({msg:'连接超时,请重试！'});
                 this.alertSearch._show();
             }
-          if (res.code === '200'){
+          if (res.respCode === 'success'){
               this.setState({
                   listData:this.state.listData.concat(res.data.ENTERPRISES),
-                 // data:res.data,
                   totalnum:res.totalnum,
               });
-          }else if(res.code === '-1'){
-              this.setState({refreshing:false});
-             // alert('服务器内部错误！')
-          }
+            }else if(res.respCode === 'failed'){
+                this.setState({msg:res.Errmsg,refreshing:false});
+                this.alertSearch._show();
+            }
            if (this.state.listData != ''){
                this.setState({soatDisable:false});
            }
@@ -604,17 +597,6 @@ export default class SearchPage extends Component {
                     </View>
                 </View>
             </View>
-            <TouchableWithoutFeedback
-                onPress={()=>{this.moreButton()}}
-            >
-                <View style={styles.moreButtonWrapper}>
-                    <View style={styles.moreButton}>
-                        <Text style={styles.moreButtonText}>
-                             确认
-                        </Text>
-                    </View>
-                </View>
-            </TouchableWithoutFeedback>
         </View>);
         return (
             <View style={styles.container}>
@@ -648,7 +630,7 @@ export default class SearchPage extends Component {
                             style={styles.searchDeleteButtonBox}
                             onPress={()=>{this.state.searchValue===''?this.openVioce():this.deleteSearch()}}
                         >
-                            <Image style={styles.userImg} source={this.state.searchValue===''?require('../../Res/Images/yuyin.png'):require('../../Res/Images/delete.png')} />
+                            <Image style={[styles.userImg,styles.searchDeleteButtonBox]} source={this.state.searchValue===''?require('../../Res/Images/yuyin.png'):require('../../Res/Images/delete.png')} />
                         </TouchableOpacity>
                     </View>
                     <View >
@@ -782,6 +764,17 @@ export default class SearchPage extends Component {
                                         >
                                             {this.state.selectType === 3?selectTimeOrMoney:selectOptions}
                                         </ScrollView>
+                                        {this.state.selectType === 3?<TouchableWithoutFeedback
+                                            onPress={()=>{this.moreButton()}}
+                                        >
+                                            <View style={styles.moreButtonWrapper}>
+                                                <View style={styles.moreButton}>
+                                                    <Text style={styles.moreButtonText}>
+                                                        确认
+                                                    </Text>
+                                                </View>
+                                            </View>
+                                        </TouchableWithoutFeedback>:<Text></Text>}
                                     </View>
                                 </View>
                             </TouchableWithoutFeedback>
@@ -873,8 +866,8 @@ const styles = StyleSheet.create({
         flexDirection:'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginTop:20,
-        marginBottom:20,
+        marginTop:10,
+        marginBottom:10,
        // backgroundColor: 'blue',
     },
     historySearch:{
@@ -884,16 +877,16 @@ const styles = StyleSheet.create({
         width:'100%',
     },
     userImg:{
-        width:22,
-        height:22,
+        width:20,
+        height:20,
     },
     listImg:{
         width:20,
         height:20,
     },
     textInput:{
-        width:'82%',
-       // backgroundColor: 'red',
+        flex:1,
+        //backgroundColor: 'red',
     },
     textInputInner:{
         width:'82%',
@@ -949,7 +942,8 @@ const styles = StyleSheet.create({
         paddingLeft: 10,
     },
     searchDeleteButtonBox:{
-        paddingRight: 10,
+      //  marginRight: 10,
+        paddingRight:6,
     },
     title:{
         fontSize: 18,
@@ -976,7 +970,7 @@ const styles = StyleSheet.create({
     },
     seachSelect:{
         width:'100%',
-       height:60,
+       height:40,
        flexDirection:'row',
        alignItems: 'center',
       // backgroundColor: 'blue',
@@ -1001,7 +995,7 @@ const styles = StyleSheet.create({
     },
     seachResultCount:{
         width:'100%',
-        height:60,
+        height:40,
         backgroundColor: '#f0f0f0',
         flexDirection:'row',
         alignItems: 'center',
@@ -1043,7 +1037,8 @@ const styles = StyleSheet.create({
         //backgroundColor: 'blue',
     },
     seachResultListTitleRightText:{
-        color:'#67c94d'
+        color:'#67c94d',
+        fontSize:10,
     },
     seachResultListTitle:{
         paddingLeft:20,
@@ -1053,29 +1048,29 @@ const styles = StyleSheet.create({
     },
     seachResultListTitleText:{
         flex:1,
-        fontSize: 20,
+        fontSize: 16,
         color:'#333333',
        // backgroundColor: 'red',
     },
     seachResultListCode:{
-        paddingTop:10,
+        paddingTop:8,
         paddingLeft:20,
     },
     seachResultListCodeText:{
-        fontSize: 16,
+        fontSize: 13,
         color:'#9e9e9e',
     },
     seachResultListMoneyText:{
-        fontSize: 16,
+        fontSize: 13,
         color:'#333333',
     },
     seachResultListTimeText:{
-        fontSize: 16,
+        fontSize: 13,
         color:'#333333',
     },
     seachResultListMessage:{
        // flex:1,
-        paddingTop:10,
+        paddingTop:6,
         flexDirection:'row',
         alignItems: 'center',
        // backgroundColor: 'red',
@@ -1087,7 +1082,7 @@ const styles = StyleSheet.create({
        // backgroundColor: 'red',
     },
     seachResultListNameText:{
-        fontSize: 16,
+        fontSize: 12,
         color:'#1abef9',
     },
     seachListRule:{
@@ -1159,7 +1154,7 @@ const styles = StyleSheet.create({
         paddingTop:2,
         paddingBottom:2,
         marginBottom:16,
-        marginRight:16,
+        marginRight:12,
        // borderColor:"#dfdfdf",
         backgroundColor: '#f0f0f0',
         borderRadius:4,
@@ -1256,7 +1251,8 @@ const styles = StyleSheet.create({
     },
     moreButtonWrapper:{
         width:'100%',
-        marginTop:56,
+        paddingTop:12,
+        paddingBottom:12,
         alignItems:'center',
     },
     moreButton:{

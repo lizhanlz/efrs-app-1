@@ -17,7 +17,7 @@ const cellWidth = (width) / 4;  // 元素宽度
 
 export default class CommonSudoku extends Component {
     static defaultProps = {
-        height: 110,
+        height: 90,
     }
 
     constructor (props) {
@@ -117,7 +117,7 @@ export default class CommonSudoku extends Component {
                         alignItems: 'center',
                     }}>
                         <Image source={image} style = { styles.image1 } resizeMode = {'contain'}/>
-                        <Text style = { styles.txt }>
+                        <Text style = { styles.txt1 }>
                             { name }
                         </Text>
                     </View>
@@ -155,15 +155,23 @@ export default class CommonSudoku extends Component {
 
 const styles = StyleSheet.create({
     container: {
-        height: 10,
+        height: 0,
     },
     innerViewStyle: {
     },
     txt: {
 
         color: '#333333',
-        fontSize: 15,
+        fontSize: 13,
         backgroundColor: '#ffffff',
+
+    },
+    txt1: {
+
+        color: '#333333',
+        fontSize: 13,
+        backgroundColor: '#ffffff',
+        opacity:0.4,
 
     },
     wrapper: {
@@ -180,7 +188,8 @@ const styles = StyleSheet.create({
         height: 30,
         marginBottom:10,
 
-        tintColor: '#778899',
+        tintColor: '#333333',
+        opacity:0.4,
     },
     headerTxt: {
         color: '#333333',
